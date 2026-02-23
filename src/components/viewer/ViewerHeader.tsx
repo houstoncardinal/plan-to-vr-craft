@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useViewer } from "@/contexts/ViewerContext";
+import FileMenu from "@/components/viewer/FileMenu";
 import {
   ChevronLeft,
   Hammer,
@@ -13,11 +14,17 @@ import {
   Sun,
   Moon,
   Camera,
-  Save,
   Share2,
   Maximize2,
-  Trash2,
-  FilePlus,
+  Leaf,
+  Snowflake,
+  Flower2,
+  Home,
+  Users,
+  FilePlus2,
+  SlidersHorizontal,
+  Layers,
+  Package,
 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import {
@@ -25,6 +32,29 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+const CAMERA_PRESETS = [
+  { value: "front", label: "Front" },
+  { value: "back", label: "Back" },
+  { value: "side", label: "Side" },
+  { value: "top", label: "Top" },
+  { value: "aerial", label: "Aerial" },
+  { value: "street", label: "Street" },
+];
+
+const SEASONS = [
+  { value: "spring", label: "Spring", icon: Flower2 },
+  { value: "summer", label: "Summer", icon: Sun },
+  { value: "autumn", label: "Autumn", icon: Leaf },
+  { value: "winter", label: "Winter", icon: Snowflake },
+];
 
 export default function ViewerHeader() {
   const { state, dispatch } = useViewer();
@@ -33,25 +63,34 @@ export default function ViewerHeader() {
     <motion.header
       initial={{ y: -10, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      className="h-12 border-b border-border bg-card flex items-center px-3 gap-2 z-50"
+      className="h-12 border-b border-border bg-card flex items-center px-3 gap-2 z-50 relative"
     >
-      {/* Left: Back + Project name */}
       <Link to="/dashboard">
         <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
           <ChevronLeft className="h-4 w-4" />
         </Button>
       </Link>
-      <div className="flex items-center gap-2 mr-4">
-        <div className="h-6 w-6 rounded bg-gradient-cardinal flex items-center justify-center">
+
+      {/* App logo + File menu */}
+      <div className="flex items-center gap-1 mr-2">
+        <div className="h-6 w-6 rounded bg-gradient-cardinal flex items-center justify-center flex-shrink-0">
           <span className="text-[10px] font-bold text-primary-foreground">VC</span>
         </div>
-        <span className="text-sm font-medium text-foreground truncate max-w-40">Meridian Tower</span>
-        <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-medium">Phase 2</span>
+        <div className="relative">
+          <FileMenu />
+        </div>
+      </div>
+
+      {/* Live project name */}
+      <div className="flex items-center gap-2 mr-2">
+        <span className="text-sm font-medium text-foreground truncate max-w-44">{state.projectName}</span>
+        <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-medium hidden sm:inline">
+          {state.objects.length} obj
+        </span>
       </div>
 
       <div className="h-6 w-px bg-border" />
 
-      {/* Mode toggle */}
       <div className="flex items-center bg-muted rounded-lg p-0.5 gap-0.5">
         <Button
           variant="ghost"
@@ -79,7 +118,6 @@ export default function ViewerHeader() {
 
       <div className="h-6 w-px bg-border" />
 
-      {/* Undo/Redo */}
       <Tooltip>
         <TooltipTrigger asChild>
           <Button
@@ -107,35 +145,6 @@ export default function ViewerHeader() {
 
       <div className="h-6 w-px bg-border" />
 
-      {/* Scene actions */}
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground"
-            onClick={() => dispatch({ type: "CLEAR_ALL" })}
-            disabled={state.objects.length === 0}
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>Clear Scene</TooltipContent>
-      </Tooltip>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground"
-            onClick={() => {
-              dispatch({ type: "CLEAR_ALL" });
-              dispatch({ type: "SET_MODE", payload: "build" });
-            }}
-          >
-            <FilePlus className="h-4 w-4" />
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>New Project</TooltipContent>
-      </Tooltip>
-
-      {/* Grid & Snap */}
       <Tooltip>
         <TooltipTrigger asChild>
           <Button
@@ -161,10 +170,91 @@ export default function ViewerHeader() {
         <TooltipContent>Snap to Grid</TooltipContent>
       </Tooltip>
 
-      {/* Spacer */}
-      <div className="flex-1" />
+      <div className="h-6 w-px bg-border" />
 
-      {/* Day/Night */}
+      <Select value={state.cameraPreset || "orbit"} onValueChange={(v) => dispatch({ type: "SET_CAMERA_PRESET", payload: v === "orbit" ? null : v })}>
+        <SelectTrigger className="h-8 w-32 text-xs">
+          <SelectValue placeholder="Camera View" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="orbit">Orbit (Free)</SelectItem>
+          {CAMERA_PRESETS.map((preset) => (
+            <SelectItem key={preset.value} value={preset.value} className="text-xs">{preset.label}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      <div className="h-6 w-px bg-border" />
+
+      {/* Camera mode: Orbit / FPS */}
+      <div className="flex items-center bg-muted rounded-lg p-0.5 gap-0.5">
+        <Button
+          variant="ghost" size="sm"
+          className={`h-7 px-2.5 text-xs rounded-md ${state.cameraMode !== "firstPerson" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground"}`}
+          onClick={() => dispatch({ type: "SET_CAMERA_MODE", payload: "orbit" })}
+        >
+          Orbit
+        </Button>
+        <Button
+          variant="ghost" size="sm"
+          className={`h-7 px-2.5 text-xs rounded-md ${state.cameraMode === "firstPerson" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground"}`}
+          onClick={() => dispatch({ type: "SET_CAMERA_MODE", payload: "firstPerson" })}
+        >
+          FPS
+        </Button>
+      </div>
+
+      <div className="h-6 w-px bg-border" />
+
+      {/* World mode toggles */}
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost" size="sm"
+            className={`h-7 px-2.5 text-xs gap-1.5 rounded-md ${state.neighborhoodMode ? "bg-primary/15 text-primary border border-primary/30" : "text-muted-foreground"}`}
+            onClick={() => dispatch({ type: "TOGGLE_NEIGHBORHOOD_MODE" })}
+          >
+            <Home className="h-3.5 w-3.5" />
+            Neighborhood
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>Toggle neighborhood — your scene becomes the empty lot</TooltipContent>
+      </Tooltip>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost" size="icon"
+            className={`h-8 w-8 ${state.npcEnabled ? "text-primary bg-primary/10" : "text-muted-foreground"}`}
+            onClick={() => dispatch({ type: "TOGGLE_NPCS" })}
+          >
+            <Users className="h-4 w-4" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>Toggle NPCs</TooltipContent>
+      </Tooltip>
+
+      <div className="h-6 w-px bg-border" />
+
+      <div className="flex items-center gap-1">
+        {SEASONS.map((season) => (
+          <Tooltip key={season.value}>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className={`h-8 w-8 ${state.season === season.value ? "text-primary bg-primary/10" : "text-muted-foreground"}`}
+                onClick={() => dispatch({ type: "SET_SEASON", payload: season.value as any })}
+              >
+                <season.icon className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>{season.label}</TooltipContent>
+          </Tooltip>
+        ))}
+      </div>
+
+      <div className="h-6 w-px bg-border" />
+
       <div className="flex items-center gap-2 w-32">
         <Moon className="h-3.5 w-3.5 text-muted-foreground" />
         <Slider
@@ -179,7 +269,6 @@ export default function ViewerHeader() {
 
       <div className="h-6 w-px bg-border" />
 
-      {/* Actions */}
       <Tooltip>
         <TooltipTrigger asChild>
           <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
@@ -187,14 +276,6 @@ export default function ViewerHeader() {
           </Button>
         </TooltipTrigger>
         <TooltipContent>Screenshot</TooltipContent>
-      </Tooltip>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
-            <Save className="h-4 w-4" />
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>Save Project</TooltipContent>
       </Tooltip>
       <Tooltip>
         <TooltipTrigger asChild>
