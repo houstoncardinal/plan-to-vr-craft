@@ -45,10 +45,10 @@ export default function Navbar() {
         </nav>
 
         <div className="hidden md:flex items-center gap-3">
-          <Button variant="ghost" size="sm" className="text-muted-foreground">
+          <Button variant="ghost" size="sm" className="text-muted-foreground font-medium">
             Sign In
           </Button>
-          <Button size="sm" className="bg-gradient-cardinal hover:opacity-90 text-primary-foreground shadow-cardinal">
+          <Button size="sm" className="bg-gradient-cardinal hover:opacity-95 text-primary-foreground shadow-cardinal hover:shadow-[0_8px_24px_hsl(0_72%_51%/0.3)] transition-all duration-300">
             Get Started
           </Button>
         </div>

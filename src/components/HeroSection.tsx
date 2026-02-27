@@ -65,16 +65,16 @@ export default function HeroSection() {
             <Link to="/dashboard">
               <Button
                 size="lg"
-                className="bg-gradient-cardinal text-primary-foreground shadow-cardinal hover:opacity-90 px-10 h-13 text-base font-medium rounded-xl"
+                className="bg-gradient-cardinal text-primary-foreground shadow-cardinal hover:shadow-[0_12px_40px_hsl(0_72%_51%/0.3)] hover:opacity-95 px-12 h-14 text-[15px] font-semibold tracking-wide rounded-2xl transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0"
               >
                 Start Building
-                <ArrowRight className="ml-2 h-4 w-4" />
+                <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </Button>
             </Link>
             <Button
               size="lg"
               variant="outline"
-              className="h-13 px-10 text-base border-border text-foreground hover:bg-secondary/80 font-medium rounded-xl"
+              className="h-14 px-12 text-[15px] font-semibold tracking-wide border-border/60 text-foreground backdrop-blur-sm rounded-2xl hover:border-primary/20 hover:bg-primary/[0.03]"
             >
               <Play className="mr-2 h-4 w-4" />
               Watch Demo
