@@ -337,6 +337,9 @@ interface ViewerContextType {
   state: ViewerState;
   dispatch: React.Dispatch<ViewerAction>;
   addObject: (obj: Omit<SceneObject, "id">) => string;
+  updateObject: (id: string, changes: Partial<SceneObject>) => void;
+  deleteObject: (id: string) => void;
+  duplicateObject: (id: string) => void;
   selectedObject: SceneObject | null;
 }
 
@@ -345,7 +348,6 @@ const ViewerContext = createContext<ViewerContextType | null>(null);
 export function ViewerProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(reducer, initialState);
 
-  // Returns the generated id so callers can use it (e.g. for selection)
   const addObject = useCallback(
     (obj: Omit<SceneObject, "id">) => {
       const id = `obj_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
@@ -355,12 +357,29 @@ export function ViewerProvider({ children }: { children: ReactNode }) {
     [dispatch]
   );
 
+  const updateObject = useCallback(
+    (id: string, changes: Partial<SceneObject>) => {
+      dispatch({ type: "UPDATE_OBJECT", payload: { id, changes } });
+    },
+    [dispatch]
+  );
+
+  const deleteObject = useCallback(
+    (id: string) => { dispatch({ type: "DELETE_OBJECT", payload: id }); },
+    [dispatch]
+  );
+
+  const duplicateObject = useCallback(
+    (id: string) => { dispatch({ type: "DUPLICATE_OBJECT", payload: id }); },
+    [dispatch]
+  );
+
   const selectedObject = state.selectedObjectId
     ? state.objects.find((o) => o.id === state.selectedObjectId) ?? null
     : null;
 
   return (
-    <ViewerContext.Provider value={{ state, dispatch, addObject, selectedObject }}>
+    <ViewerContext.Provider value={{ state, dispatch, addObject, updateObject, deleteObject, duplicateObject, selectedObject }}>
       {children}
     </ViewerContext.Provider>
   );

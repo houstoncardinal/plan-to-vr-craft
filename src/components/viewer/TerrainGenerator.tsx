@@ -1,1 +1,106 @@
-import { useRef, useMemo, useCallback } from \"react\";\nimport { useFrame } from \"@react-three/fiber\";\nimport * as THREE from \"three\";\nimport { useViewer } from \"@/contexts/ViewerContext\";\n\ninterface TerrainGeneratorProps {\n  width?: number;\n  height?: number;\n  widthSegments?: number;\n  heightSegments?: number;\n  maxHeight?: number;\n  seed?: number;\n}\n\n// Simple noise function for terrain generation\nfunction noise(x: number, y: number, seed: number = 0): number {\n  const n = Math.sin(x * 12.9898 + y * 78.233 + seed * 43.758) * 43758.5453;\n  return n - Math.floor(n);\n}\n\n// Fractal Brownian Motion for more realistic terrain\nfunction fbm(x: number, y: number, octaves: number = 4, seed: number = 0): number {\n  let value = 0;\n  let amplitude = 1;\n  let frequency = 1;\n  let maxValue = 0;\n\n  for (let i = 0; i < octaves; i++) {\n    value += noise(x * frequency, y * frequency, seed + i) * amplitude;\n    maxValue += amplitude;\n    amplitude *= 0.5;\n    frequency *= 2;\n  }\n\n  return value / maxValue;\n}\n\n// Generate terrain data\nfunction generateTerrainData(\n  width: number,\n  height: number,\n  widthSegments: number,\n  heightSegments: number,\n  maxHeight: number,\n  seed: number\n): Float32Array {\n  const data = new Float32Array((widthSegments + 1) * (heightSegments + 1));\n  \n  for (let i = 0; i <= heightSegments; i++) {\n    for (let j = 0; j <= widthSegments; j++) {\n      const x = (j / widthSegments) * width;\n      const y = (i / heightSegments) * height;\n      \n      // Generate height using multiple octaves of noise\n      let heightValue = fbm(x * 0.01, y * 0.01, 6, seed);\n      \n      // Add some larger features\n      heightValue += fbm(x * 0.005, y * 0.005, 3, seed + 100) * 0.5;\n      \n      // Add ridges for mountains\n      const ridgeNoise = Math.abs(fbm(x * 0.02, y * 0.02, 4, seed + 200));\n      heightValue += ridgeNoise * 0.3;\n      \n      // Normalize and scale\n      heightValue = (heightValue + 1) * 0.5; // Normalize to 0-1\n      heightValue = Math.pow(heightValue, 1.5); // Apply curve for more dramatic terrain\n      heightValue *= maxHeight;\n      \n      data[i * (widthSegments + 1) + j] = heightValue;\n    }\n  }\n  \n  return data;\n}\n\n// Generate texture coordinates based on height\nfunction generateTextureCoordinates(\n  data: Float32Array,\n  widthSegments: number,\n  heightSegments: number,\n  maxHeight: number\n): Float32Array {\n  const uvs = new Float32Array(data.length * 2);\n  \n  for (let i = 0; i <= heightSegments; i++) {\n    for (let j = 0; j <= widthSegments; j++) {\n      const index = i * (widthSegments + 1) + j;\n      const height = data[index];\n      const normalizedHeight = height / maxHeight;\n      \n      // UV coordinates\n      uvs[index * 2] = j / widthSegments;\n      uvs[index * 2 + 1] = i / heightSegments;\n    }\n  }\n  \n  return uvs;\n}\n\n// Generate colors based on height\nfunction generateColors(\n  data: Float32Array,\n  widthSegments: number,\n  heightSegments: number,\n  maxHeight: number\n): Float32Array {\n  const colors = new Float32Array(data.length * 3);\n  \n  for (let i = 0; i <= heightSegments; i++) {\n    for (let j = 0; j <= widthSegments; j++) {\n      const index = i * (widthSegments + 1) + j;\n      const height = data[index];\n      const normalizedHeight = height / maxHeight;\n      \n      let r, g, b;\n      \n      if (normalizedHeight < 0.3) {\n        // Water/low areas - blue-green\n        r = 0.1 + normalizedHeight * 0.2;\n        g = 0.3 + normalizedHeight * 0.4;\n        b = 0.5 + normalizedHeight * 0.3;\n      } else if (normalizedHeight < 0.5) {\n        // Grass - green\n        const t = (normalizedHeight - 0.3) / 0.2;\n        r = 0.2 + t * 0.1;\n        g = 0.5 + t * 0.2;\n        b = 0.2 + t * 0.1;\n      } else if (normalizedHeight < 0.7) {\n        // Mountain/grass transition - brown-green\n        const t = (normalizedHeight - 0.5) / 0.2;\n        r = 0.3 + t * 0.3;\n        g = 0.7 - t * 0.2;\n        b = 0.3 - t * 0.1;\n      } else if (normalizedHeight < 0.85) {\n        // Mountain rock - gray\n        const t = (normalizedHeight - 0.7) / 0.15;\n        r = 0.6 - t * 0.1;\n        g = 0.5 - t * 0.1;\n        b = 0.4 - t * 0.05;\n      } else {\n        // Snow - white\n        const t = (normalizedHeight - 0.85) / 0.15;\n        r = 0.5 + t * 0.5;\n        g = 0.4 + t * 0.6;\n        b = 0.35 + t * 0.65;\n      }\n      \n      colors[index * 3] = r;\n      colors[index * 3 + 1] = g;\n      colors[index * 3 + 2] = b;\n    }\n  }\n  \n  return colors;\n}\n\nexport default function TerrainGenerator({\n  width = 100,\n  height = 100,\n  widthSegments = 128,\n  heightSegments = 128,\n  maxHeight = 20,\n  seed = Math.random() * 1000\n}: TerrainGeneratorProps) {\n  const meshRef = useRef<THREE.Mesh>(null);\n  const { state } = useViewer();\n  \n  // Generate terrain geometry\n  const geometry = useMemo(() => {\n    const geo = new THREE.PlaneGeometry(width, height, widthSegments, heightSegments);\n    \n    // Generate height data\n    const heightData = generateTerrainData(width, height, widthSegments, heightSegments, maxHeight, seed);\n    \n    // Apply height data to vertices\n    const vertices = geo.attributes.position.array as Float32Array;\n    for (let i = 0; i < heightData.length; i++) {\n      vertices[i * 3 + 2] = heightData[i]; // Z is up in our coordinate system\n    }\n    \n    // Generate colors based on height\n    const colors = generateColors(heightData, widthSegments, heightSegments, maxHeight);\n    geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));\n    \n    // Generate texture coordinates\n    const uvs = generateTextureCoordinates(heightData, widthSegments, heightSegments, maxHeight);\n    geo.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));\n    \n    // Calculate normals for proper lighting\n    geo.computeVertexNormals();\n    \n    return geo;\n  }, [width, height, widthSegments, heightSegments, maxHeight, seed]);\n  \n  // Create material with vertex colors\n  const material = useMemo(() => {\n    return new THREE.MeshStandardMaterial({\n      vertexColors: true,\n      roughness: 0.8,\n      metalness: 0.1,\n      flatShading: false,\n    });\n  }, []);\n  \n  // Animate water level or other effects if needed\n  useFrame((state) => {\n    if (meshRef.current && state.dayNightCycle) {\n      // Could add time-based effects here\n      meshRef.current.rotation.z = 0;\n    }\n  });\n  \n  return (\n    <mesh\n      ref={meshRef}\n      geometry={geometry}\n      material={material}\n      position={[-width / 2, 0, -height / 2]}\n      rotation={[-Math.PI / 2, 0, 0]}\n      castShadow\n      receiveShadow\n    />\n  );\n}\n\n// Procedural vegetation placement\nexport function placeVegetationOnTerrain(\n  terrainData: Float32Array,\n  width: number,\n  height: number,\n  widthSegments: number,\n  heightSegments: number,\n  density: number = 0.1\n): Array<{ position: [number, number, number]; type: string }> {\n  const vegetation: Array<{ position: [number, number, number]; type: string }> = [];\n  \n  for (let i = 0; i <= heightSegments; i += 2) {\n    for (let j = 0; j <= widthSegments; j += 2) {\n      if (Math.random() < density) {\n        const x = (j / widthSegments) * width - width / 2;\n        const z = (i / heightSegments) * height - height / 2;\n        const terrainHeight = terrainData[i * (widthSegments + 1) + j];\n        const normalizedHeight = terrainHeight / 20; // Assuming maxHeight = 20\n        \n        // Only place vegetation on suitable terrain (not too steep, not water)\n        if (normalizedHeight > 0.3 && normalizedHeight < 0.8) {\n          const type = Math.random() < 0.7 ? 'tree' : 'bush';\n          vegetation.push({\n            position: [x, terrainHeight + 0.1, z],\n            type\n          });\n        }\n      }\n    }\n  }\n  \n  return vegetation;\n}
+import { useRef, useMemo } from "react";
+import * as THREE from "three";
+
+interface TerrainGeneratorProps {
+  width?: number;
+  height?: number;
+  widthSegments?: number;
+  heightSegments?: number;
+  maxHeight?: number;
+  seed?: number;
+}
+
+function noise(x: number, y: number, seed: number = 0): number {
+  const n = Math.sin(x * 12.9898 + y * 78.233 + seed * 43.758) * 43758.5453;
+  return n - Math.floor(n);
+}
+
+function fbm(x: number, y: number, octaves: number = 4, seed: number = 0): number {
+  let value = 0;
+  let amplitude = 1;
+  let frequency = 1;
+  let maxValue = 0;
+  for (let i = 0; i < octaves; i++) {
+    value += noise(x * frequency, y * frequency, seed + i) * amplitude;
+    maxValue += amplitude;
+    amplitude *= 0.5;
+    frequency *= 2;
+  }
+  return value / maxValue;
+}
+
+function generateColors(
+  data: Float32Array,
+  widthSegments: number,
+  heightSegments: number,
+  maxHeight: number
+): Float32Array {
+  const colors = new Float32Array(data.length * 3);
+  for (let i = 0; i <= heightSegments; i++) {
+    for (let j = 0; j <= widthSegments; j++) {
+      const index = i * (widthSegments + 1) + j;
+      const h = data[index] / maxHeight;
+      let r: number, g: number, b: number;
+      if (h < 0.3) { r = 0.1 + h * 0.2; g = 0.3 + h * 0.4; b = 0.5 + h * 0.3; }
+      else if (h < 0.5) { const t = (h - 0.3) / 0.2; r = 0.2 + t * 0.1; g = 0.5 + t * 0.2; b = 0.2 + t * 0.1; }
+      else if (h < 0.7) { const t = (h - 0.5) / 0.2; r = 0.3 + t * 0.3; g = 0.7 - t * 0.2; b = 0.3 - t * 0.1; }
+      else if (h < 0.85) { const t = (h - 0.7) / 0.15; r = 0.6 - t * 0.1; g = 0.5 - t * 0.1; b = 0.4 - t * 0.05; }
+      else { const t = (h - 0.85) / 0.15; r = 0.5 + t * 0.5; g = 0.4 + t * 0.6; b = 0.35 + t * 0.65; }
+      colors[index * 3] = r;
+      colors[index * 3 + 1] = g;
+      colors[index * 3 + 2] = b;
+    }
+  }
+  return colors;
+}
+
+export default function TerrainGenerator({
+  width = 100,
+  height = 100,
+  widthSegments = 128,
+  heightSegments = 128,
+  maxHeight = 20,
+  seed = 42,
+}: TerrainGeneratorProps) {
+  const meshRef = useRef<THREE.Mesh>(null);
+
+  const geometry = useMemo(() => {
+    const geo = new THREE.PlaneGeometry(width, height, widthSegments, heightSegments);
+    const vertices = geo.attributes.position.array as Float32Array;
+    const heightData = new Float32Array((widthSegments + 1) * (heightSegments + 1));
+
+    for (let i = 0; i <= heightSegments; i++) {
+      for (let j = 0; j <= widthSegments; j++) {
+        const x = (j / widthSegments) * width;
+        const y = (i / heightSegments) * height;
+        let hv = fbm(x * 0.01, y * 0.01, 6, seed) + fbm(x * 0.005, y * 0.005, 3, seed + 100) * 0.5;
+        hv = ((hv + 1) * 0.5) ** 1.5 * maxHeight;
+        const idx = i * (widthSegments + 1) + j;
+        heightData[idx] = hv;
+        vertices[idx * 3 + 2] = hv;
+      }
+    }
+
+    const colors = generateColors(heightData, widthSegments, heightSegments, maxHeight);
+    geo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+    geo.computeVertexNormals();
+    return geo;
+  }, [width, height, widthSegments, heightSegments, maxHeight, seed]);
+
+  const material = useMemo(
+    () => new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.8, metalness: 0.1 }),
+    []
+  );
+
+  return (
+    <mesh
+      ref={meshRef}
+      geometry={geometry}
+      material={material}
+      position={[-width / 2, 0, -height / 2]}
+      rotation={[-Math.PI / 2, 0, 0]}
+      castShadow
+      receiveShadow
+    />
+  );
+}

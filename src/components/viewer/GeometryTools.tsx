@@ -1,1 +1,220 @@
-import { useState, useRef, useCallback } from \"react\";\nimport * as THREE from \"three\";\nimport { useViewer } from \"@/contexts/ViewerContext\";\nimport { Button } from \"@/components/ui/button\";\nimport { Card } from \"@/components/ui/card\";\nimport { Input } from \"@/components/ui/input\";\nimport { Label } from \"@/components/ui/label\";\nimport { Slider } from \"@/components/ui/slider\";\nimport { Tabs, TabsContent, TabsList, TabsTrigger } from \"@/components/ui/tabs\";\nimport { Badge } from \"@/components/ui/badge\";\nimport {\n  Move,\n  RotateCw,\n  Maximize2,\n  Copy,\n  Trash2,\n  Grid3X3,\n  Circle,\n  Square,\n  Triangle,\n  Hexagon,\n  Star,\n  ArrowUp,\n  ArrowDown,\n  ArrowLeft,\n  ArrowRight,\n  Box,\n  Sphere,\n  Cylinder,\n  Cone,\n  Torus,\n  Plus,\n  Minus,\n} from \"lucide-react\";\n\ninterface GeometryToolsProps {\n  onClose: () => void;\n}\n\ninterface TransformControlsProps {\n  objectId: string;\n}\n\nfunction TransformControls({ objectId }: TransformControlsProps) {\n  const { state, updateObject } = useViewer();\n  const object = state.objects.find(obj => obj.id === objectId);\n  \n  if (!object) return null;\n  \n  const handlePositionChange = (axis: 'x' | 'y' | 'z', value: number) => {\n    const newPosition = [...object.position] as [number, number, number];\n    const axisIndex = axis === 'x' ? 0 : axis === 'y' ? 1 : 2;\n    newPosition[axisIndex] = value;\n    updateObject(objectId, { position: newPosition });\n  };\n  \n  const handleRotationChange = (axis: 'x' | 'y' | 'z', value: number) => {\n    const newRotation = [...object.rotation] as [number, number, number];\n    const axisIndex = axis === 'x' ? 0 : axis === 'y' ? 1 : 2;\n    newRotation[axisIndex] = value;\n    updateObject(objectId, { rotation: newRotation });\n  };\n  \n  const handleScaleChange = (axis: 'x' | 'y' | 'z', value: number) => {\n    const newScale = [...object.scale] as [number, number, number];\n    const axisIndex = axis === 'x' ? 0 : axis === 'y' ? 1 : 2;\n    newScale[axisIndex] = value;\n    updateObject(objectId, { scale: newScale });\n  };\n  \n  return (\n    <div className=\"space-y-6\">\n      <div>\n        <h3 className=\"font-medium text-sm text-foreground mb-4\">Transform</h3>\n        \n        {/* Position */}\n        <div className=\"space-y-3\">\n          <Label className=\"text-xs font-medium text-foreground\">Position</Label>\n          {(['x', 'y', 'z'] as const).map((axis) => (\n            <div key={axis} className=\"flex items-center gap-3\">\n              <span className=\"text-xs text-muted-foreground w-4\">{axis.toUpperCase()}</span>\n              <Slider\n                value={[object.position[axis === 'x' ? 0 : axis === 'y' ? 1 : 2]]}\n                onValueChange={([value]) => handlePositionChange(axis, value)}\n                min={-50}\n                max={50}\n                step={0.1}\n                className=\"flex-1\"\n              />\n              <Input\n                type=\"number\"\n                value={object.position[axis === 'x' ? 0 : axis === 'y' ? 1 : 2].toFixed(1)}\n                onChange={(e) => handlePositionChange(axis, parseFloat(e.target.value))}\n                className=\"w-16 h-6 text-xs\"\n              />\n            </div>\n          ))}\n        </div>\n        \n        {/* Rotation */}\n        <div className=\"space-y-3 mt-4\">\n          <Label className=\"text-xs font-medium text-foreground\">Rotation (radians)</Label>\n          {(['x', 'y', 'z'] as const).map((axis) => (\n            <div key={axis} className=\"flex items-center gap-3\">\n              <span className=\"text-xs text-muted-foreground w-4\">{axis.toUpperCase()}</span>\n              <Slider\n                value={[object.rotation[axis === 'x' ? 0 : axis === 'y' ? 1 : 2]]}\n                onValueChange={([value]) => handleRotationChange(axis, value)}\n                min={-Math.PI}\n                max={Math.PI}\n                step={0.01}\n                className=\"flex-1\"\n              />\n              <Input\n                type=\"number\"\n                value={object.rotation[axis === 'x' ? 0 : axis === 'y' ? 1 : 2].toFixed(2)}\n                onChange={(e) => handleRotationChange(axis, parseFloat(e.target.value))}\n                className=\"w-16 h-6 text-xs\"\n              />\n            </div>\n          ))}\n        </div>\n        \n        {/* Scale */}\n        <div className=\"space-y-3 mt-4\">\n          <Label className=\"text-xs font-medium text-foreground\">Scale</Label>\n          {(['x', 'y', 'z'] as const).map((axis) => (\n            <div key={axis} className=\"flex items-center gap-3\">\n              <span className=\"text-xs text-muted-foreground w-4\">{axis.toUpperCase()}</span>\n              <Slider\n                value={[object.scale[axis === 'x' ? 0 : axis === 'y' ? 1 : 2]]}\n                onValueChange={([value]) => handleScaleChange(axis, value)}\n                min={0.1}\n                max={10}\n                step={0.1}\n                className=\"flex-1\"\n              />\n              <Input\n                type=\"number\"\n                value={object.scale[axis === 'x' ? 0 : axis === 'y' ? 1 : 2].toFixed(1)}\n                onChange={(e) => handleScaleChange(axis, parseFloat(e.target.value))}\n                className=\"w-16 h-6 text-xs\"\n              />\n            </div>\n          ))}\n        </div>\n      </div>\n    </div>\n  );\n}\n\ninterface PrimitiveCreatorProps {}\n\nfunction PrimitiveCreator({}: PrimitiveCreatorProps) {\n  const { addObject } = useViewer();\n  \n  const createPrimitive = useCallback((type: string) => {\n    const primitives: Record<string, { scale: [number, number, number]; position: [number, number, number] }> = {\n      cube: { scale: [2, 2, 2], position: [0, 1, 0] },\n      sphere: { scale: [2, 2, 2], position: [0, 1, 0] },\n      cylinder: { scale: [1, 3, 1], position: [0, 1.5, 0] },\n      cone: { scale: [2, 3, 2], position: [0, 1.5, 0] },\n      torus: { scale: [2, 2, 2], position: [0, 1, 0] },\n      plane: { scale: [4, 0.1, 4], position: [0, 0, 0] },\n    };\n    \n    const primitive = primitives[type];\n    if (!primitive) return;\n    \n    const newObject = {\n      id: `primitive-${type}-${Date.now()}`,\n      type: 'component' as const,\n      position: primitive.position,\n      rotation: [0, 0, 0] as [number, number, number],\n      scale: primitive.scale,\n      properties: { primitiveType: type },\n      material: 'concrete' as const,\n      layer: 'Default',\n      visible: true,\n      locked: false,\n      name: `${type.charAt(0).toUpperCase() + type.slice(1)}`,\n    };\n    \n    addObject(newObject);\n  }, [addObject]);\n  \n  const primitives = [\n    { type: 'cube', icon: Box, label: 'Cube' },\n    { type: 'sphere', icon: Sphere, label: 'Sphere' },\n    { type: 'cylinder', icon: Cylinder, label: 'Cylinder' },\n    { type: 'cone', icon: Cone, label: 'Cone' },\n    { type: 'torus', icon: Circle, label: 'Torus' },\n    { type: 'plane', icon: Square, label: 'Plane' },\n  ];\n  \n  return (\n    <div className=\"space-y-4\">\n      <div className=\"grid grid-cols-2 gap-2\">\n        {primitives.map(({ type, icon: Icon, label }) => (\n          <Button\n            key={type}\n            variant=\"outline\"\n            size=\"sm\"\n            onClick={() => createPrimitive(type)}\n            className=\"h-12 flex flex-col gap-1\"\n          >\n            <Icon className=\"h-4 w-4\" />\n            <span className=\"text-xs\">{label}</span>\n          </Button>\n        ))}\n      </div>\n    </div>\n  );\n}\n\ninterface ArrayToolsProps {}\n\nfunction ArrayTools({}: ArrayToolsProps) {\n  const { state, addObject, updateObject } = useViewer();\n  const [arraySettings, setArraySettings] = useState({\n    count: 3,\n    spacing: 2,\n    direction: 'x' as 'x' | 'y' | 'z',\n    rotate: false,\n  });\n  \n  const createArray = useCallback(() => {\n    if (!state.selectedObjectId) return;\n    \n    const sourceObject = state.objects.find(obj => obj.id === state.selectedObjectId);\n    if (!sourceObject) return;\n    \n    for (let i = 1; i < arraySettings.count; i++) {\n      const offset = i * arraySettings.spacing;\n      const position = [...sourceObject.position] as [number, number, number];\n      const rotation = [...sourceObject.rotation] as [number, number, number];\n      \n      const axisIndex = arraySettings.direction === 'x' ? 0 : arraySettings.direction === 'y' ? 1 : 2;\n      position[axisIndex] += offset;\n      \n      if (arraySettings.rotate) {\n        rotation[arraySettings.direction === 'x' ? 1 : arraySettings.direction === 'y' ? 0 : 2] += (Math.PI * 2 * i) / arraySettings.count;\n      }\n      \n      const newObject = {\n        ...sourceObject,\n        id: `${sourceObject.id}-array-${i}-${Date.now()}`,\n        position,\n        rotation,\n        name: `${sourceObject.name} ${i + 1}`,\n      };\n      \n      addObject(newObject);\n    }\n  }, [state.selectedObjectId, state.objects, arraySettings, addObject]);\n  \n  return (\n    <div className=\"space-y-4\">\n      <div className=\"space-y-3\">\n        <div>\n          <Label className=\"text-xs font-medium text-foreground\">Count</Label>\n          <div className=\"flex items-center gap-2 mt-1\">\n            <Button\n              size=\"sm\"\n              variant=\"outline\"\n              onClick={() => setArraySettings(prev => ({ ...prev, count: Math.max(2, prev.count - 1) }))}\n            >\n              <Minus className=\"h-3 w-3\" />\n            </Button>\n            <Input\n              type=\"number\"\n              value={arraySettings.count}\n              onChange={(e) => setArraySettings(prev => ({ ...prev, count: parseInt(e.target.value) || 2 }))}\n              className=\"flex-1 h-8 text-center\"\n              min={2}\n              max={20}\n            />\n            <Button\n              size=\"sm\"\n              variant=\"outline\"\n              onClick={() => setArraySettings(prev => ({ ...prev, count: Math.min(20, prev.count + 1) }))}\n            >\n              <Plus className=\"h-3 w-3\" />\n            </Button>\n          </div>\n        </div>\n        \n        <div>\n          <Label className=\"text-xs font-medium text-foreground\">Spacing</Label>\n          <Slider\n            value={[arraySettings.spacing]}\n            onValueChange={([value]) => setArraySettings(prev => ({ ...prev, spacing: value }))}\n            min={0.5}\n            max={10}\n            step={0.1}\n            className=\"mt-1\"\n          />\n          <div className=\"text-xs text-muted-foreground mt-1\">{arraySettings.spacing.toFixed(1)} units</div>\n        </div>\n        \n        <div>\n          <Label className=\"text-xs font-medium text-foreground mb-2 block\">Direction</Label>\n          <div className=\"grid grid-cols-3 gap-1\">\n            {(['x', 'y', 'z'] as const).map((dir) => (\n              <Button\n                key={dir}\n                size=\"sm\"\n                variant={arraySettings.direction === dir ? 'default' : 'outline'}\n                onClick={() => setArraySettings(prev => ({ ...prev, direction: dir }))}\n                className=\"h-8\"\n              >\n                {dir.toUpperCase()}\n              </Button>\n            ))}\n          </div>\n        </div>\n        \n        <div className=\"flex items-center gap-2\">\n          <input\n            type=\"checkbox\"\n            id=\"rotate-array\"\n            checked={arraySettings.rotate}\n            onChange={(e) => setArraySettings(prev => ({ ...prev, rotate: e.target.checked }))}\n            className=\"rounded\"\n          />\n          <Label htmlFor=\"rotate-array\" className=\"text-xs text-foreground\">\n            Rotate each instance\n          </Label>\n        </div>\n      </div>\n      \n      <Button\n        onClick={createArray}\n        disabled={!state.selectedObjectId}\n        className=\"w-full bg-gradient-cardinal text-primary-foreground shadow-cardinal hover:opacity-90\"\n        size=\"sm\"\n      >\n        <Grid3X3 className=\"h-4 w-4 mr-2\" />\n        Create Array\n      </Button>\n    </div>\n  );\n}\n\nexport default function GeometryTools({ onClose }: GeometryToolsProps) {\n  const { state, deleteObject, duplicateObject } = useViewer();\n  const selectedObject = state.objects.find(obj => obj.id === state.selectedObjectId);\n  \n  return (\n    <div className=\"h-full flex flex-col bg-background\">\n      {/* Header */}\n      <div className=\"p-4 border-b border-border\">\n        <h2 className=\"font-display text-lg font-semibold text-foreground\">\n          Geometry Tools\n        </h2>\n        {selectedObject && (\n          <p className=\"text-xs text-muted-foreground mt-1\">\n            Selected: {selectedObject.name}\n          </p>\n        )}\n      </div>\n      \n      {/* Tools */}\n      <div className=\"flex-1 overflow-auto\">\n        <Tabs defaultValue=\"transform\" className=\"h-full flex flex-col\">\n          <div className=\"p-4 border-b border-border\">\n            <TabsList className=\"grid w-full grid-cols-3 h-auto\">\n              <TabsTrigger value=\"transform\" className=\"text-xs\">Transform</TabsTrigger>\n              <TabsTrigger value=\"create\" className=\"text-xs\">Create</TabsTrigger>\n              <TabsTrigger value=\"array\" className=\"text-xs\">Array</TabsTrigger>\n            </TabsList>\n          </div>\n          \n          <div className=\"flex-1 p-4\">\n            <TabsContent value=\"transform\" className=\"mt-0\">\n              {selectedObject ? (\n                <TransformControls objectId={selectedObject.id} />\n              ) : (\n                <div className=\"text-center text-muted-foreground text-sm\">\n                  Select an object to transform\n                </div>\n              )}\n            </TabsContent>\n            \n            <TabsContent value=\"create\" className=\"mt-0\">\n              <PrimitiveCreator />\n            </TabsContent>\n            \n            <TabsContent value=\"array\" className=\"mt-0\">\n              <ArrayTools />\n            </TabsContent>\n          </div>\n        </Tabs>\n      </div>\n      \n      {/* Footer Actions */}\n      {selectedObject && (\n        <div className=\"p-4 border-t border-border\">\n          <div className=\"flex gap-2\">\n            <Button\n              size=\"sm\"\n              variant=\"outline\"\n              onClick={() => duplicateObject(selectedObject.id)}\n              className=\"flex-1\"\n            >\n              <Copy className=\"h-4 w-4 mr-2\" />\n              Duplicate\n            </Button>\n            <Button\n              size=\"sm\"\n              variant=\"outline\"\n              onClick={() => deleteObject(selectedObject.id)}\n              className=\"flex-1 text-destructive hover:text-destructive\"\n            >\n              <Trash2 className=\"h-4 w-4 mr-2\" />\n              Delete\n            </Button>\n          </div>\n        </div>\n      )}\n    </div>\n  );\n}
+import { useState, useCallback } from "react";
+import { useViewer } from "@/contexts/ViewerContext";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Copy, Trash2, Grid3X3, Circle, Square, Box, Minus, Plus,
+} from "lucide-react";
+
+interface GeometryToolsProps {
+  onClose: () => void;
+}
+
+function TransformControls({ objectId }: { objectId: string }) {
+  const { state, updateObject } = useViewer();
+  const object = state.objects.find((obj) => obj.id === objectId);
+  if (!object) return null;
+
+  const handleChange = (
+    prop: "position" | "rotation" | "scale",
+    axis: "x" | "y" | "z",
+    value: number
+  ) => {
+    const idx = axis === "x" ? 0 : axis === "y" ? 1 : 2;
+    const arr = [...object[prop]] as [number, number, number];
+    arr[idx] = value;
+    updateObject(objectId, { [prop]: arr });
+  };
+
+  const configs = [
+    { label: "Position", prop: "position" as const, min: -50, max: 50, step: 0.1 },
+    { label: "Rotation", prop: "rotation" as const, min: -Math.PI, max: Math.PI, step: 0.01 },
+    { label: "Scale", prop: "scale" as const, min: 0.1, max: 10, step: 0.1 },
+  ];
+
+  return (
+    <div className="space-y-6">
+      <h3 className="font-medium text-sm text-foreground mb-4">Transform</h3>
+      {configs.map(({ label, prop, min, max, step }) => (
+        <div key={prop} className="space-y-3">
+          <Label className="text-xs font-medium text-foreground">{label}</Label>
+          {(["x", "y", "z"] as const).map((axis) => {
+            const idx = axis === "x" ? 0 : axis === "y" ? 1 : 2;
+            return (
+              <div key={axis} className="flex items-center gap-3">
+                <span className="text-xs text-muted-foreground w-4">{axis.toUpperCase()}</span>
+                <Slider
+                  value={[object[prop][idx]]}
+                  onValueChange={([v]) => handleChange(prop, axis, v)}
+                  min={min}
+                  max={max}
+                  step={step}
+                  className="flex-1"
+                />
+                <Input
+                  type="number"
+                  value={object[prop][idx].toFixed(prop === "rotation" ? 2 : 1)}
+                  onChange={(e) => handleChange(prop, axis, parseFloat(e.target.value))}
+                  className="w-16 h-6 text-xs"
+                />
+              </div>
+            );
+          })}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function PrimitiveCreator() {
+  const { addObject } = useViewer();
+
+  const createPrimitive = useCallback(
+    (type: string) => {
+      const primitives: Record<string, { scale: [number, number, number]; position: [number, number, number] }> = {
+        cube: { scale: [2, 2, 2], position: [0, 1, 0] },
+        sphere: { scale: [2, 2, 2], position: [0, 1, 0] },
+        cylinder: { scale: [1, 3, 1], position: [0, 1.5, 0] },
+        cone: { scale: [2, 3, 2], position: [0, 1.5, 0] },
+        torus: { scale: [2, 2, 2], position: [0, 1, 0] },
+        plane: { scale: [4, 0.1, 4], position: [0, 0, 0] },
+      };
+      const p = primitives[type];
+      if (!p) return;
+      addObject({
+        type: "component" as any,
+        position: p.position,
+        rotation: [0, 0, 0],
+        scale: p.scale,
+        properties: { primitiveType: type },
+        material: "concrete",
+        layer: "Default",
+        visible: true,
+        locked: false,
+        name: type.charAt(0).toUpperCase() + type.slice(1),
+      });
+    },
+    [addObject]
+  );
+
+  const primitives = [
+    { type: "cube", icon: Box, label: "Cube" },
+    { type: "sphere", icon: Circle, label: "Sphere" },
+    { type: "cylinder", icon: Square, label: "Cylinder" },
+    { type: "cone", icon: Square, label: "Cone" },
+    { type: "torus", icon: Circle, label: "Torus" },
+    { type: "plane", icon: Square, label: "Plane" },
+  ];
+
+  return (
+    <div className="grid grid-cols-2 gap-2">
+      {primitives.map(({ type, icon: Icon, label }) => (
+        <Button key={type} variant="outline" size="sm" onClick={() => createPrimitive(type)} className="h-12 flex flex-col gap-1">
+          <Icon className="h-4 w-4" />
+          <span className="text-xs">{label}</span>
+        </Button>
+      ))}
+    </div>
+  );
+}
+
+function ArrayTools() {
+  const { state, addObject } = useViewer();
+  const [settings, setSettings] = useState({ count: 3, spacing: 2, direction: "x" as "x" | "y" | "z" });
+
+  const createArray = useCallback(() => {
+    if (!state.selectedObjectId) return;
+    const src = state.objects.find((o) => o.id === state.selectedObjectId);
+    if (!src) return;
+    for (let i = 1; i < settings.count; i++) {
+      const pos = [...src.position] as [number, number, number];
+      const idx = settings.direction === "x" ? 0 : settings.direction === "y" ? 1 : 2;
+      pos[idx] += i * settings.spacing;
+      addObject({ ...src, position: pos, name: `${src.name} ${i + 1}`, rotation: [...src.rotation] as [number, number, number], scale: [...src.scale] as [number, number, number] });
+    }
+  }, [state.selectedObjectId, state.objects, settings, addObject]);
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <Label className="text-xs font-medium text-foreground">Count</Label>
+        <div className="flex items-center gap-2 mt-1">
+          <Button size="sm" variant="outline" onClick={() => setSettings((p) => ({ ...p, count: Math.max(2, p.count - 1) }))}>
+            <Minus className="h-3 w-3" />
+          </Button>
+          <Input type="number" value={settings.count} onChange={(e) => setSettings((p) => ({ ...p, count: parseInt(e.target.value) || 2 }))} className="flex-1 h-8 text-center" />
+          <Button size="sm" variant="outline" onClick={() => setSettings((p) => ({ ...p, count: Math.min(20, p.count + 1) }))}>
+            <Plus className="h-3 w-3" />
+          </Button>
+        </div>
+      </div>
+      <div>
+        <Label className="text-xs font-medium text-foreground">Spacing</Label>
+        <Slider value={[settings.spacing]} onValueChange={([v]) => setSettings((p) => ({ ...p, spacing: v }))} min={0.5} max={10} step={0.1} className="mt-1" />
+      </div>
+      <div>
+        <Label className="text-xs font-medium text-foreground mb-2 block">Direction</Label>
+        <div className="grid grid-cols-3 gap-1">
+          {(["x", "y", "z"] as const).map((d) => (
+            <Button key={d} size="sm" variant={settings.direction === d ? "default" : "outline"} onClick={() => setSettings((p) => ({ ...p, direction: d }))} className="h-8">
+              {d.toUpperCase()}
+            </Button>
+          ))}
+        </div>
+      </div>
+      <Button onClick={createArray} disabled={!state.selectedObjectId} className="w-full bg-gradient-cardinal text-primary-foreground shadow-cardinal hover:opacity-90" size="sm">
+        <Grid3X3 className="h-4 w-4 mr-2" />
+        Create Array
+      </Button>
+    </div>
+  );
+}
+
+export default function GeometryTools({ onClose }: GeometryToolsProps) {
+  const { state, deleteObject, duplicateObject } = useViewer();
+  const selectedObject = state.objects.find((o) => o.id === state.selectedObjectId);
+
+  return (
+    <div className="h-full flex flex-col bg-background">
+      <div className="p-4 border-b border-border">
+        <h2 className="font-display text-lg font-semibold text-foreground">Geometry Tools</h2>
+        {selectedObject && <p className="text-xs text-muted-foreground mt-1">Selected: {selectedObject.name}</p>}
+      </div>
+
+      <div className="flex-1 overflow-auto">
+        <Tabs defaultValue="transform" className="h-full flex flex-col">
+          <div className="p-4 border-b border-border">
+            <TabsList className="grid w-full grid-cols-3 h-auto">
+              <TabsTrigger value="transform" className="text-xs">Transform</TabsTrigger>
+              <TabsTrigger value="create" className="text-xs">Create</TabsTrigger>
+              <TabsTrigger value="array" className="text-xs">Array</TabsTrigger>
+            </TabsList>
+          </div>
+          <div className="flex-1 p-4">
+            <TabsContent value="transform" className="mt-0">
+              {selectedObject ? <TransformControls objectId={selectedObject.id} /> : <div className="text-center text-muted-foreground text-sm">Select an object to transform</div>}
+            </TabsContent>
+            <TabsContent value="create" className="mt-0"><PrimitiveCreator /></TabsContent>
+            <TabsContent value="array" className="mt-0"><ArrayTools /></TabsContent>
+          </div>
+        </Tabs>
+      </div>
+
+      {selectedObject && (
+        <div className="p-4 border-t border-border">
+          <div className="flex gap-2">
+            <Button size="sm" variant="outline" onClick={() => duplicateObject(selectedObject.id)} className="flex-1">
+              <Copy className="h-4 w-4 mr-2" />Duplicate
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => deleteObject(selectedObject.id)} className="flex-1 text-destructive hover:text-destructive">
+              <Trash2 className="h-4 w-4 mr-2" />Delete
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
