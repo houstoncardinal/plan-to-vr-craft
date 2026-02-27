@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useReducer, useCallback, ReactNode } from "react";
-import { mansionObjects, MANSION_PROJECT_NAME } from "@/lib/mansionProject";
 
 // Types
 export type EditorMode = "view" | "build";
@@ -140,6 +139,7 @@ type ViewerAction =
   | { type: "SET_PENDING_OBJECT"; payload: Partial<SceneObject> | null }
   | { type: "UPDATE_TOOL_CONFIG"; payload: { tool: string; config: ToolConfig } }
   | { type: "SET_DRAGGING_OBJECT"; payload: string | null }
+  | { type: "DUPLICATE_OBJECT"; payload: string }
   | { type: "TOGGLE_NEIGHBORHOOD_MODE" }
   | { type: "TOGGLE_NPCS" }
   | { type: "NEW_PROJECT" }
@@ -158,13 +158,13 @@ const defaultLayers = [
 ];
 
 const initialState: ViewerState = {
-  projectName: MANSION_PROJECT_NAME,
+  projectName: "New Project",
   mode: "view",
   activeTool: "select",
   cameraMode: "orbit",
   cameraPreset: null,
   selectedObjectId: null,
-  objects: mansionObjects,
+  objects: [],
   layers: defaultLayers,
   gridVisible: true,
   gridSnap: true,
@@ -289,6 +289,19 @@ function reducer(state: ViewerState, action: ViewerAction): ViewerState {
       };
     case "SET_DRAGGING_OBJECT":
       return { ...state, draggingObjectId: action.payload };
+    case "DUPLICATE_OBJECT": {
+      const src = state.objects.find((o) => o.id === action.payload);
+      if (!src) return state;
+      const newId = `obj_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+      const clone: SceneObject = { ...src, id: newId, position: [src.position[0] + 1, src.position[1], src.position[2] + 1], name: `${src.name} copy` };
+      return {
+        ...state,
+        objects: [...state.objects, clone],
+        selectedObjectId: newId,
+        undoStack: [...state.undoStack.slice(-MAX_UNDO + 1), state.objects],
+        redoStack: [],
+      };
+    }
     case "TOGGLE_NEIGHBORHOOD_MODE":
       return { ...state, neighborhoodMode: !state.neighborhoodMode };
     case "TOGGLE_NPCS":

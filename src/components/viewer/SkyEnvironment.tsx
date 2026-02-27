@@ -56,13 +56,15 @@ function GroundPlane() {
 
   return (
     <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.1, 0]} receiveShadow>
-      <planeGeometry args={[800, 800, 64, 64]} />
+      {/* 16×16 segments — flat plane gets no visual benefit from extra tessellation;
+          fog hides far geometry anyway. meshStandardMaterial is far cheaper than Physical */}
+      <planeGeometry args={[800, 800, 16, 16]} />
       <meshStandardMaterial
         ref={matRef}
         color="#3d6b35"
-        roughness={0.92}
+        roughness={0.94}
         metalness={0}
-        envMapIntensity={0.3}
+        envMapIntensity={0.35}
       />
     </mesh>
   );
@@ -76,21 +78,21 @@ function MountainPeak({
 }) {
   return (
     <group position={[x, 0, z]} userData={{ noCollide: true }}>
-      {/* Main cone */}
+      {/* Main cone — 18 radial segments, 6 height segs for smooth silhouette */}
       <mesh castShadow userData={{ noCollide: true }}>
-        <coneGeometry args={[radius, height, 12, 4]} />
+        <coneGeometry args={[radius, height, 18, 6]} />
         <meshStandardMaterial color={color} roughness={0.9} metalness={0} />
       </mesh>
       {/* Snow cap */}
       {snowCap && (
         <mesh position={[0, height * 0.3, 0]} userData={{ noCollide: true }}>
-          <coneGeometry args={[radius * 0.35, height * 0.25, 10, 2]} />
+          <coneGeometry args={[radius * 0.35, height * 0.25, 14, 3]} />
           <meshStandardMaterial color="#f0f4f8" roughness={0.55} />
         </mesh>
       )}
       {/* Mid-slope shadow cone (darker) */}
       <mesh position={[radius * 0.15, -height * 0.05, 0]} userData={{ noCollide: true }}>
-        <coneGeometry args={[radius * 0.7, height * 0.85, 12, 4]} />
+        <coneGeometry args={[radius * 0.7, height * 0.85, 18, 6]} />
         <meshStandardMaterial color={new THREE.Color(color).multiplyScalar(0.7).getStyle()} roughness={0.95} />
       </mesh>
     </group>
@@ -168,8 +170,9 @@ function CloudCluster({ position, speed, scale }: {
     <group ref={groupRef} position={position} scale={scale} userData={{ noCollide: true }}>
       {puffs.map((p, i) => (
         <mesh key={i} position={[p.x, p.y, p.z]} userData={{ noCollide: true }}>
-          <sphereGeometry args={[p.r, 9, 7]} />
-          <meshStandardMaterial color="#f4f6f8" roughness={1} metalness={0} transparent opacity={0.9} />
+          {/* 14×11 segments — rounder cloud puffs, noticeably smoother silhouette */}
+          <sphereGeometry args={[p.r, 14, 11]} />
+          <meshStandardMaterial color="#f4f6f8" roughness={1} metalness={0} transparent opacity={0.92} />
         </mesh>
       ))}
     </group>
@@ -245,14 +248,14 @@ function SunDisc() {
 
   return (
     <>
-      {/* Glow halo */}
+      {/* Glow halo — 64 segments for smooth circle */}
       <mesh ref={glowRef} userData={{ noCollide: true }}>
-        <circleGeometry args={[22, 32]} />
+        <circleGeometry args={[22, 64]} />
         <meshBasicMaterial ref={glowMatRef} color="#ffe8a0" transparent opacity={0.25} depthWrite={false} />
       </mesh>
       {/* Sun disc */}
       <mesh ref={discRef} userData={{ noCollide: true }}>
-        <circleGeometry args={[9, 32]} />
+        <circleGeometry args={[9, 64]} />
         <meshBasicMaterial ref={matRef} color="#fff8e8" transparent opacity={1} depthWrite={false} />
       </mesh>
     </>
@@ -288,11 +291,11 @@ function MoonDisc() {
   return (
     <>
       <mesh ref={glowRef} userData={{ noCollide: true }}>
-        <circleGeometry args={[16, 32]} />
+        <circleGeometry args={[16, 64]} />
         <meshBasicMaterial ref={glowMatRef} color="#c8d8f0" transparent opacity={0.2} depthWrite={false} />
       </mesh>
       <mesh ref={discRef} userData={{ noCollide: true }}>
-        <circleGeometry args={[6, 32]} />
+        <circleGeometry args={[6, 64]} />
         <meshBasicMaterial ref={matRef} color="#e8eef8" transparent opacity={0} depthWrite={false} />
       </mesh>
     </>
@@ -320,7 +323,7 @@ function DynamicSky() {
         mieDirectionalG={0.82}
       />
       {isNight && (
-        <Stars radius={180} depth={60} count={6000} factor={5} saturation={0.1} fade speed={0.4} />
+        <Stars radius={200} depth={70} count={8000} factor={5} saturation={0.12} fade speed={0.3} />
       )}
     </>
   );

@@ -89,6 +89,23 @@ export default function ViewerHeader() {
         </span>
       </div>
 
+      {/* Quick "New" button */}
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground"
+            onClick={() => {
+              if (window.confirm("Start a new project? Current scene will be discarded.")) {
+                dispatch({ type: "NEW_PROJECT" });
+              }
+            }}
+          >
+            <FilePlus2 className="h-4 w-4" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>New Project (Ctrl+N)</TooltipContent>
+      </Tooltip>
+
       <div className="h-6 w-px bg-border" />
 
       <div className="flex items-center bg-muted rounded-lg p-0.5 gap-0.5">
@@ -293,6 +310,53 @@ export default function ViewerHeader() {
         </TooltipTrigger>
         <TooltipContent>Fullscreen</TooltipContent>
       </Tooltip>
+
+      {/* Spacer pushes panel toggles to the far right */}
+      <div className="flex-1" />
+      <div className="h-6 w-px bg-border" />
+
+      {/* Right-panel toggle buttons — always visible regardless of screen size */}
+      <div className="flex items-center gap-0.5">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost" size="sm"
+              className={`h-8 px-2.5 text-xs gap-1.5 rounded-md ${state.rightPanel === "properties" ? "bg-primary/12 text-primary" : "text-muted-foreground hover:text-foreground"}`}
+              onClick={() => dispatch({ type: "SET_RIGHT_PANEL", payload: "properties" })}
+            >
+              <SlidersHorizontal className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Properties</span>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Properties panel — position, scale, material</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost" size="sm"
+              className={`h-8 px-2.5 text-xs gap-1.5 rounded-md ${state.rightPanel === "assets" ? "bg-primary/12 text-primary" : "text-muted-foreground hover:text-foreground"}`}
+              onClick={() => dispatch({ type: "SET_RIGHT_PANEL", payload: "assets" })}
+            >
+              <Package className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Assets</span>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Asset library — place objects</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost" size="sm"
+              className={`h-8 px-2.5 text-xs gap-1.5 rounded-md ${state.rightPanel === "layers" ? "bg-primary/12 text-primary" : "text-muted-foreground hover:text-foreground"}`}
+              onClick={() => dispatch({ type: "SET_RIGHT_PANEL", payload: "layers" })}
+            >
+              <Layers className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Layers</span>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Layers panel — visibility per layer</TooltipContent>
+        </Tooltip>
+      </div>
     </motion.header>
   );
 }

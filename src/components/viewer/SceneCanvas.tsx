@@ -62,39 +62,43 @@ const materialColors: Record<MaterialType, string> = {
 function createRealisticMaterial(color: string, type: MaterialType) {
   // Ultra-realistic PBR properties — tuned for architectural visualization
   const enhancements: Record<MaterialType, Partial<THREE.MeshPhysicalMaterialParameters>> = {
-    concrete:              { roughness: 0.88, metalness: 0,    clearcoat: 0.12, clearcoatRoughness: 0.75, envMapIntensity: 0.4 },
-    brick:                 { roughness: 0.93, metalness: 0,    envMapIntensity: 0.25 },
-    glass:                 { roughness: 0.03, metalness: 0.08, transmission: 0.96, thickness: 0.5, ior: 1.52, clearcoat: 1.0, clearcoatRoughness: 0.04, envMapIntensity: 3.0 },
-    wood:                  { roughness: 0.65, metalness: 0,    clearcoat: 0.38, clearcoatRoughness: 0.48, envMapIntensity: 0.7 },
-    steel:                 { roughness: 0.16, metalness: 0.96, clearcoat: 0.65, clearcoatRoughness: 0.18, envMapIntensity: 2.2 },
-    drywall:               { roughness: 0.84, metalness: 0,    envMapIntensity: 0.18 },
-    stone:                 { roughness: 0.76, metalness: 0.04, clearcoat: 0.2,  clearcoatRoughness: 0.68, envMapIntensity: 0.45 },
-    asphalt:               { roughness: 0.97, metalness: 0,    envMapIntensity: 0.08 },
-    "brushed-aluminum":    { roughness: 0.26, metalness: 1.0,  clearcoat: 0.35, clearcoatRoughness: 0.38, envMapIntensity: 2.4 },
-    "copper-patina":       { roughness: 0.58, metalness: 0.75, envMapIntensity: 1.8 },
-    "stainless-steel":     { roughness: 0.1,  metalness: 0.98, clearcoat: 0.55, clearcoatRoughness: 0.12, envMapIntensity: 2.8 },
-    "bronze-aged":         { roughness: 0.55, metalness: 0.8,  envMapIntensity: 2.0 },
-    "oak-hardwood":        { roughness: 0.6,  metalness: 0,    clearcoat: 0.48, clearcoatRoughness: 0.42, envMapIntensity: 0.85 },
-    "walnut-finished":     { roughness: 0.5,  metalness: 0,    clearcoat: 0.58, clearcoatRoughness: 0.38, envMapIntensity: 0.95 },
-    "bamboo-natural":      { roughness: 0.7,  metalness: 0,    clearcoat: 0.18, envMapIntensity: 0.45 },
-    "reclaimed-barn":      { roughness: 0.97, metalness: 0,    envMapIntensity: 0.15 },
-    "marble-carrara":      { roughness: 0.06, metalness: 0,    clearcoat: 0.92, clearcoatRoughness: 0.06, envMapIntensity: 1.5 },
-    "travertine-tumbled":  { roughness: 0.42, metalness: 0,    clearcoat: 0.32, clearcoatRoughness: 0.58, envMapIntensity: 0.6 },
-    "concrete-polished":   { roughness: 0.22, metalness: 0.04, clearcoat: 0.55, clearcoatRoughness: 0.28, envMapIntensity: 0.9 },
-    "slate-charcoal":      { roughness: 0.8,  metalness: 0.06, envMapIntensity: 0.35 },
-    "glass-clear":         { roughness: 0.02, metalness: 0.05, transmission: 0.97, thickness: 0.4, ior: 1.52, clearcoat: 1.0, clearcoatRoughness: 0.03, envMapIntensity: 3.0 },
-    "glass-frosted":       { roughness: 0.42, metalness: 0,    transmission: 0.62, thickness: 0.3, ior: 1.4,  clearcoat: 0.5, clearcoatRoughness: 0.5,  envMapIntensity: 0.9 },
-    "glass-bronze-tinted": { roughness: 0.04, metalness: 0.12, transmission: 0.72, thickness: 0.5, ior: 1.52, clearcoat: 0.92, clearcoatRoughness: 0.06, envMapIntensity: 2.2 },
-    "ceramic-white-glossy":{ roughness: 0.04, metalness: 0,    clearcoat: 0.96, clearcoatRoughness: 0.04, envMapIntensity: 1.2 },
-    "subway-tile-beveled": { roughness: 0.1,  metalness: 0,    clearcoat: 0.82, clearcoatRoughness: 0.08, envMapIntensity: 0.9 },
-    "terracotta-tile":     { roughness: 0.78, metalness: 0,    clearcoat: 0.12, envMapIntensity: 0.28 },
-    "velvet-crushed":      { roughness: 0.96, metalness: 0,    sheen: 1.0, sheenRoughness: 0.38, envMapIntensity: 0.2 },
-    "linen-natural":       { roughness: 0.9,  metalness: 0,    envMapIntensity: 0.15 },
-    "acrylic-clear":       { roughness: 0.03, metalness: 0,    transmission: 0.92, thickness: 0.3, ior: 1.49, clearcoat: 0.85, clearcoatRoughness: 0.06, envMapIntensity: 1.8 },
-    "carbon-fiber":        { roughness: 0.32, metalness: 0.82, clearcoat: 0.85, clearcoatRoughness: 0.18, envMapIntensity: 2.0 },
-    "paint-matte":         { roughness: 0.88, metalness: 0,    envMapIntensity: 0.22 },
-    "paint-semi-gloss":    { roughness: 0.44, metalness: 0,    clearcoat: 0.42, clearcoatRoughness: 0.55, envMapIntensity: 0.55 },
-    "paint-high-gloss":    { roughness: 0.08, metalness: 0,    clearcoat: 0.92, clearcoatRoughness: 0.04, envMapIntensity: 0.85 },
+    concrete:              { roughness: 0.88, metalness: 0,    clearcoat: 0.12, clearcoatRoughness: 0.75, envMapIntensity: 0.5 },
+    brick:                 { roughness: 0.93, metalness: 0,    envMapIntensity: 0.3 },
+    // Physical glass: proper IOR 1.52, volumetric attenuation tints thick panes blue
+    glass:                 { roughness: 0.02, metalness: 0.06, transmission: 0.97, thickness: 0.6, ior: 1.52, clearcoat: 1.0, clearcoatRoughness: 0.03, envMapIntensity: 3.5, attenuationColor: "#cce8ff", attenuationDistance: 0.5 },
+    // Wood: anisotropic sheen follows grain direction
+    wood:                  { roughness: 0.62, metalness: 0,    clearcoat: 0.42, clearcoatRoughness: 0.44, envMapIntensity: 0.85, anisotropy: 0.6, anisotropyRotation: 0 },
+    // Steel: strong anisotropy for brushed mill-finish look
+    steel:                 { roughness: 0.14, metalness: 0.97, clearcoat: 0.7,  clearcoatRoughness: 0.15, envMapIntensity: 2.6, anisotropy: 0.8 },
+    drywall:               { roughness: 0.84, metalness: 0,    envMapIntensity: 0.2 },
+    stone:                 { roughness: 0.76, metalness: 0.04, clearcoat: 0.22, clearcoatRoughness: 0.65, envMapIntensity: 0.55 },
+    asphalt:               { roughness: 0.97, metalness: 0,    envMapIntensity: 0.1 },
+    // Brushed aluminum: cross-grain anisotropy (rotation=90°)
+    "brushed-aluminum":    { roughness: 0.24, metalness: 1.0,  clearcoat: 0.38, clearcoatRoughness: 0.35, envMapIntensity: 2.8, anisotropy: 0.9, anisotropyRotation: Math.PI / 2 },
+    "copper-patina":       { roughness: 0.56, metalness: 0.78, envMapIntensity: 2.0 },
+    "stainless-steel":     { roughness: 0.08, metalness: 0.99, clearcoat: 0.6,  clearcoatRoughness: 0.1,  envMapIntensity: 3.2, anisotropy: 0.85 },
+    "bronze-aged":         { roughness: 0.52, metalness: 0.82, envMapIntensity: 2.2 },
+    "oak-hardwood":        { roughness: 0.58, metalness: 0,    clearcoat: 0.52, clearcoatRoughness: 0.4,  envMapIntensity: 1.0,  anisotropy: 0.7, anisotropyRotation: 0 },
+    "walnut-finished":     { roughness: 0.48, metalness: 0,    clearcoat: 0.62, clearcoatRoughness: 0.35, envMapIntensity: 1.1,  anisotropy: 0.65 },
+    "bamboo-natural":      { roughness: 0.68, metalness: 0,    clearcoat: 0.2,  envMapIntensity: 0.55, anisotropy: 0.5 },
+    "reclaimed-barn":      { roughness: 0.97, metalness: 0,    envMapIntensity: 0.18 },
+    "marble-carrara":      { roughness: 0.05, metalness: 0,    clearcoat: 0.95, clearcoatRoughness: 0.04, envMapIntensity: 1.8 },
+    "travertine-tumbled":  { roughness: 0.4,  metalness: 0,    clearcoat: 0.35, clearcoatRoughness: 0.55, envMapIntensity: 0.7 },
+    "concrete-polished":   { roughness: 0.2,  metalness: 0.04, clearcoat: 0.6,  clearcoatRoughness: 0.25, envMapIntensity: 1.1 },
+    "slate-charcoal":      { roughness: 0.78, metalness: 0.06, envMapIntensity: 0.4 },
+    "glass-clear":         { roughness: 0.02, metalness: 0.04, transmission: 0.98, thickness: 0.5, ior: 1.52, clearcoat: 1.0, clearcoatRoughness: 0.02, envMapIntensity: 3.5, attenuationColor: "#e8f4ff", attenuationDistance: 0.8 },
+    "glass-frosted":       { roughness: 0.4,  metalness: 0,    transmission: 0.65, thickness: 0.35, ior: 1.4,  clearcoat: 0.55, clearcoatRoughness: 0.45, envMapIntensity: 1.0 },
+    "glass-bronze-tinted": { roughness: 0.03, metalness: 0.1,  transmission: 0.74, thickness: 0.55, ior: 1.52, clearcoat: 0.95, clearcoatRoughness: 0.05, envMapIntensity: 2.5, attenuationColor: "#c8a060", attenuationDistance: 0.4 },
+    "ceramic-white-glossy":{ roughness: 0.03, metalness: 0,    clearcoat: 0.98, clearcoatRoughness: 0.03, envMapIntensity: 1.4 },
+    "subway-tile-beveled": { roughness: 0.08, metalness: 0,    clearcoat: 0.86, clearcoatRoughness: 0.06, envMapIntensity: 1.1 },
+    "terracotta-tile":     { roughness: 0.76, metalness: 0,    clearcoat: 0.14, envMapIntensity: 0.32 },
+    "velvet-crushed":      { roughness: 0.96, metalness: 0,    sheen: 1.0, sheenRoughness: 0.35, envMapIntensity: 0.25 },
+    "linen-natural":       { roughness: 0.9,  metalness: 0,    envMapIntensity: 0.18 },
+    "acrylic-clear":       { roughness: 0.02, metalness: 0,    transmission: 0.94, thickness: 0.35, ior: 1.49, clearcoat: 0.9,  clearcoatRoughness: 0.04, envMapIntensity: 2.0, attenuationColor: "#f0f8ff", attenuationDistance: 1.0 },
+    "carbon-fiber":        { roughness: 0.28, metalness: 0.85, clearcoat: 0.9,  clearcoatRoughness: 0.15, envMapIntensity: 2.4, anisotropy: 0.55 },
+    "paint-matte":         { roughness: 0.88, metalness: 0,    envMapIntensity: 0.25 },
+    "paint-semi-gloss":    { roughness: 0.42, metalness: 0,    clearcoat: 0.46, clearcoatRoughness: 0.52, envMapIntensity: 0.65 },
+    "paint-high-gloss":    { roughness: 0.06, metalness: 0,    clearcoat: 0.96, clearcoatRoughness: 0.03, envMapIntensity: 1.0 },
   };
   return { color, ...(enhancements[type] || { roughness: 0.6, metalness: 0, envMapIntensity: 0.5 }) };
 }
@@ -974,13 +978,14 @@ function DynamicLighting() {
         castShadow
         shadow-mapSize-width={4096}
         shadow-mapSize-height={4096}
-        shadow-camera-far={120}
-        shadow-camera-left={-60}
-        shadow-camera-right={60}
-        shadow-camera-top={60}
-        shadow-camera-bottom={-60}
-        shadow-bias={-0.0003}
-        shadow-normalBias={0.02}
+        shadow-camera-far={140}
+        shadow-camera-left={-70}
+        shadow-camera-right={70}
+        shadow-camera-top={70}
+        shadow-camera-bottom={-70}
+        shadow-bias={-0.00025}
+        shadow-normalBias={0.015}
+        shadow-radius={2}
       />
       <ambientLight intensity={ambientIntensity} color={new THREE.Color(...c.sky)} />
       <hemisphereLight args={[new THREE.Color(...c.sky), new THREE.Color(c.ground), 0.65]} />
@@ -1416,11 +1421,17 @@ export default function SceneCanvas() {
       <Canvas
         shadows
         camera={{ position: [20, 16, 20], fov: 55 }}
+        // dpr: cap at 2× for sharp rendering on high-DPI displays without over-sampling
+        dpr={[1, 2]}
         gl={{
           antialias: true,
+          // logarithmicDepthBuffer: eliminates z-fighting on coplanar faces
+          logarithmicDepthBuffer: true,
           toneMapping: THREE.ACESFilmicToneMapping,
-          toneMappingExposure: 1.1,
+          toneMappingExposure: 1.15,
           powerPreference: "high-performance",
+          // SRGBColorSpace ensures correct linear → sRGB conversion for display
+          outputColorSpace: THREE.SRGBColorSpace,
         }}
         onCreated={({ gl }) => {
           gl.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -1465,11 +1476,12 @@ export default function SceneCanvas() {
           {!isFPS && (
             <ContactShadows
               position={[0, 0.005, 0]}
-              opacity={0.35}
-              blur={1.8}
-              far={12}
-              resolution={1024}
+              opacity={0.38}
+              blur={2.5}
+              far={14}
+              resolution={512}
               color="#000000"
+              frames={1}
             />
           )}
 
@@ -1551,6 +1563,69 @@ export default function SceneCanvas() {
         </div>
       )}
 
+      {/* Properties panel pull-tab — right edge of canvas, visible when object selected but panel is closed */}
+      {state.selectedObjectId && !isFPS && state.rightPanel !== "properties" && (
+        <button
+          className="absolute right-0 top-1/2 -translate-y-1/2 z-30 flex flex-col items-center justify-center gap-1 bg-card border border-border border-r-0 rounded-l-xl px-1.5 py-3 shadow-lg hover:bg-muted transition-colors"
+          onClick={() => dispatch({ type: "SET_RIGHT_PANEL", payload: "properties" })}
+          title="Open Properties panel"
+        >
+          <svg className="w-3.5 h-3.5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <line x1="4" y1="6" x2="20" y2="6" strokeWidth="2" strokeLinecap="round"/>
+            <line x1="4" y1="12" x2="14" y2="12" strokeWidth="2" strokeLinecap="round"/>
+            <line x1="4" y1="18" x2="20" y2="18" strokeWidth="2" strokeLinecap="round"/>
+          </svg>
+          <span className="text-[9px] font-semibold text-primary tracking-widest" style={{ writingMode: "vertical-rl" }}>PROPS</span>
+        </button>
+      )}
+
+      {/* Floating selected-object action bar */}
+      {state.selectedObjectId && !isFPS && (() => {
+        const sel = state.objects.find(o => o.id === state.selectedObjectId);
+        if (!sel) return null;
+        return (
+          <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1 bg-black/75 backdrop-blur-md border border-white/12 rounded-xl px-2 py-1.5 shadow-xl">
+            <span className="text-[11px] font-medium text-white/70 px-1.5 max-w-[140px] truncate">{sel.name}</span>
+            <div className="w-px h-4 bg-white/15 mx-0.5" />
+            <button
+              className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] text-blue-300/80 hover:text-blue-200 hover:bg-blue-500/10 transition-colors"
+              onClick={() => dispatch({ type: "SET_RIGHT_PANEL", payload: "properties" })}
+              title="Open Properties panel"
+            >
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6" strokeWidth="2" strokeLinecap="round"/><line x1="4" y1="12" x2="14" y2="12" strokeWidth="2" strokeLinecap="round"/><line x1="4" y1="18" x2="20" y2="18" strokeWidth="2" strokeLinecap="round"/></svg>
+              Edit
+            </button>
+            <button
+              className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+              onClick={() => {
+                if (!sel.locked) dispatch({ type: "DUPLICATE_OBJECT", payload: sel.id });
+              }}
+              title="Duplicate (Ctrl+D)"
+            >
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="8" y="8" width="13" height="13" rx="2" strokeWidth="2"/><rect x="3" y="3" width="13" height="13" rx="2" strokeWidth="2"/></svg>
+              Duplicate
+            </button>
+            <button
+              className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] text-red-400/80 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+              onClick={() => {
+                if (!sel.locked) dispatch({ type: "DELETE_OBJECT", payload: sel.id });
+              }}
+              title="Delete (Del)"
+            >
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6" strokeWidth="2"/><path d="M19 6l-1 14H6L5 6" strokeWidth="2"/><path d="M10 11v6M14 11v6" strokeWidth="2"/></svg>
+              Delete
+            </button>
+            <button
+              className="ml-0.5 w-5 h-5 flex items-center justify-center rounded-md text-white/30 hover:text-white/70 hover:bg-white/10 transition-colors"
+              onClick={() => dispatch({ type: "SELECT_OBJECT", payload: null })}
+              title="Deselect (Esc)"
+            >
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18" strokeWidth="2.5"/><line x1="6" y1="6" x2="18" y2="18" strokeWidth="2.5"/></svg>
+            </button>
+          </div>
+        );
+      })()}
+
       {/* Status bar */}
       <div className="absolute bottom-3 left-3 glass rounded-lg px-3 py-1.5 flex items-center gap-3 pointer-events-none">
         <span className="text-[11px] font-semibold text-foreground">
@@ -1580,7 +1655,7 @@ export default function SceneCanvas() {
             : state.mode === "build" && state.activeTool !== "select"
             ? "Move mouse → place preview · Click → place · R rotate · Esc exit"
             : state.mode === "build"
-            ? "Click to select · Drag to move · Del to delete · WASD pan · F for FPS"
+            ? "Click select · Drag move · Del delete · Ctrl+D duplicate · WASD pan · F for FPS"
             : "Scroll zoom · Drag orbit · WASD fly · F for FPS mode"}
         </p>
       </div>

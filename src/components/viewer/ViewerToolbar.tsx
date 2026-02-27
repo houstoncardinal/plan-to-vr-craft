@@ -138,6 +138,10 @@ export default function ViewerToolbar() {
                           dispatch({ type: "SET_TOOL", payload: "select" });
                           setShowOptions(false);
                         } else {
+                          // Auto-enter Build mode when selecting any build tool
+                          if (state.mode !== "build" && tool.tool !== "select" && tool.tool !== "measure" && tool.tool !== "section") {
+                            dispatch({ type: "SET_MODE", payload: "build" });
+                          }
                           dispatch({ type: "SET_TOOL", payload: tool.tool });
                           setShowOptions(tool.hasOptions ? !isSame || !showOptions : false);
                         }

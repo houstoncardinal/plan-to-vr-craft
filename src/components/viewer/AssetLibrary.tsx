@@ -92,10 +92,11 @@ export default function AssetLibrary() {
 
   return (
     <motion.aside
-      initial={{ x: 20, opacity: 0 }}
-      animate={{ x: 0, opacity: 1 }}
-      exit={{ x: 20, opacity: 0 }}
-      className="w-72 border-l border-border bg-card flex flex-col"
+      initial={{ x: "100%" }}
+      animate={{ x: 0 }}
+      exit={{ x: "100%" }}
+      transition={{ type: "spring", stiffness: 340, damping: 32 }}
+      className="fixed right-0 top-12 bottom-0 w-72 border-l border-border bg-card flex flex-col z-40 shadow-2xl"
     >
       <div className="h-10 border-b border-border flex items-center justify-between px-3">
         <span className="text-xs font-semibold text-foreground uppercase tracking-wider">Assets</span>

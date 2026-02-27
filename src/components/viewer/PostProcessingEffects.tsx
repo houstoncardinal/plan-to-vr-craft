@@ -1,51 +1,86 @@
-import { EffectComposer, Bloom, Vignette, ChromaticAberration, N8AO } from "@react-three/postprocessing";
+import {
+  EffectComposer,
+  Bloom,
+  Vignette,
+  ChromaticAberration,
+  N8AO,
+  SMAA,
+  HueSaturation,
+  BrightnessContrast,
+} from "@react-three/postprocessing";
 import { BlendFunction } from "postprocessing";
 import { Vector2 } from "three";
 import { useViewer } from "@/contexts/ViewerContext";
 
 export default function PostProcessingEffects() {
   const { state } = useViewer();
-  const isNight = state.dayNightCycle < 0.25 || state.dayNightCycle > 0.75;
+  const cycle = state.dayNightCycle;
+  const isNight = cycle < 0.25 || cycle > 0.75;
+  const isDusk = cycle > 0.45 && cycle < 0.68;
   const isFPS = state.cameraMode === "firstPerson";
 
   return (
-    <EffectComposer multisampling={8}>
-      {/* High-quality ambient occlusion — depth in corners and crevices */}
+    // multisampling=0 — SMAA (final pass) handles all anti-aliasing.
+    // Running MSAA + SMAA together rendered the scene at 4× resolution for zero gain.
+    <EffectComposer multisampling={0}>
+      {/* ── Ambient occlusion ─────────────────────────────────────────────── */}
+      {/* N8AO: adds depth to corners, crevices, and contact areas            */}
       <N8AO
-        aoRadius={1.8}
-        intensity={isNight ? 4.2 : 3.0}
-        distanceFalloff={0.45}
+        aoRadius={2.4}
+        intensity={isNight ? 5.2 : 3.8}
+        distanceFalloff={0.38}
         quality="high"
         halfRes={false}
         screenSpaceRadius={false}
         color="black"
       />
 
-      {/* Bloom — lights, glass, emissive surfaces glow realistically */}
+      {/* ── Bloom ─────────────────────────────────────────────────────────── */}
+      {/* Lights, emissive glass, and metal highlights glow realistically      */}
       <Bloom
-        intensity={isNight ? 2.2 : 0.55}
-        luminanceThreshold={isNight ? 0.3 : 0.78}
-        luminanceSmoothing={0.85}
+        intensity={isNight ? 3.0 : isDusk ? 1.1 : 0.7}
+        luminanceThreshold={isNight ? 0.22 : isDusk ? 0.52 : 0.68}
+        luminanceSmoothing={0.88}
         mipmapBlur
-        radius={0.6}
+        radius={0.68}
         levels={8}
       />
 
-      {/* Chromatic aberration — subtle lens fringing, stronger in FPS */}
-      <ChromaticAberration
+      {/* ── Colour grading ────────────────────────────────────────────────── */}
+      {/* Slight saturation lift in daylight → punchier materials             */}
+      {/* Desaturate at night → cooler, more cinematic                        */}
+      <HueSaturation
         blendFunction={BlendFunction.NORMAL}
-        offset={new Vector2(isFPS ? 0.0006 : 0.0002, isFPS ? 0.0006 : 0.0002)}
-        radialModulation={false}
-        modulationOffset={0.5}
+        hue={0}
+        saturation={isDusk ? 0.22 : isNight ? -0.1 : 0.14}
       />
 
-      {/* Vignette — dark edges, immersive in FPS mode */}
+      {/* Micro-contrast boost — tightens perceived detail without crushing blacks */}
+      <BrightnessContrast
+        brightness={isNight ? -0.03 : 0.0}
+        contrast={0.1}
+      />
+
+      {/* ── Lens effects ──────────────────────────────────────────────────── */}
+      {/* Radial chromatic aberration — most visible at frame edges (realistic lens) */}
+      <ChromaticAberration
+        blendFunction={BlendFunction.NORMAL}
+        offset={new Vector2(isFPS ? 0.00055 : 0.00016, isFPS ? 0.00055 : 0.00016)}
+        radialModulation={true}
+        modulationOffset={0.68}
+      />
+
+      {/* Vignette — subtly darkens edges, draws eye to centre */}
       <Vignette
-        offset={isFPS ? 0.32 : 0.42}
-        darkness={isFPS ? 0.78 : 0.48}
+        offset={isFPS ? 0.28 : 0.36}
+        darkness={isFPS ? 0.7 : 0.4}
         eskil={false}
         blendFunction={BlendFunction.NORMAL}
       />
+
+      {/* ── SMAA anti-aliasing (final pass) ───────────────────────────────── */}
+      {/* Morphological AA — resolves sub-pixel edges better than MSAA alone  */}
+      <SMAA />
     </EffectComposer>
   );
 }
