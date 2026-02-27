@@ -29,7 +29,7 @@ export default function CTASection() {
           <Link to="/dashboard">
             <Button
               size="lg"
-              className="relative bg-primary-foreground text-foreground hover:bg-primary-foreground/90 h-12 px-8 text-base font-semibold"
+              className="relative bg-primary-foreground text-foreground hover:bg-primary-foreground/95 h-14 px-12 text-[15px] font-semibold tracking-wide rounded-2xl shadow-[0_4px_20px_hsl(0_0%_100%/0.2)] hover:shadow-[0_8px_32px_hsl(0_0%_100%/0.3)] transition-all duration-300 hover:-translate-y-0.5"
             >
               Start Free Trial
               <ArrowRight className="ml-2 h-4 w-4" />
