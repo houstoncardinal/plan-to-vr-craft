@@ -295,9 +295,7 @@ export const PBR_MATERIALS: Record<string, PBRMaterial> = {
       color: '#4b0082',
       metalness: 0.0,
       roughness: 0.9,
-      normalMap: '/fabrics/velvet-normal.jpg',
-      sheen: 1.0,
-      sheenColor: '#ffffff',
+    normalMap: '/fabrics/velvet-normal.jpg',
     },
     category: 'Fabrics',
     tags: ['furniture', 'luxury', 'upholstery']

@@ -1,1 +1,221 @@
-import { useState } from "react";\nimport { Search, Grid3X3, List, Plus, Settings } from "lucide-react";\nimport { Button } from "@/components/ui/button";\nimport { Input } from "@/components/ui/input";\nimport { Card } from "@/components/ui/card";\nimport { ScrollArea } from "@/components/ui/scroll-area";\nimport { Badge } from "@/components/ui/badge";\nimport { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";\nimport { Slider } from "@/components/ui/slider";\nimport { Label } from "@/components/ui/label";\nimport { BUILDING_COMPONENTS, COMPONENT_CATEGORIES, getComponentsByCategory, searchComponents } from \"@/lib/buildingComponents\";\nimport { useViewer } from \"@/contexts/ViewerContext\";\n\ninterface BuildingLibraryProps {\n  onClose: () => void;\n}\n\ninterface BuildingCardProps {\n  component: any;\n  onSelect: () => void;\n}\n\nfunction BuildingCard({ component, onSelect }: BuildingCardProps) {\n  return (\n    <Card\n      className=\"p-4 cursor-pointer hover:shadow-lg transition-all duration-200 hover:-translate-y-1 border-border\"\n      onClick={onSelect}\n    >\n      {/* Component icon/preview */}\n      <div className=\"w-full h-20 rounded-lg mb-3 bg-gradient-to-br from-cardinal-light/20 to-cardinal-light/5 flex items-center justify-center\">\n        <div className=\"w-12 h-12 bg-cardinal rounded-lg flex items-center justify-center\">\n          <span className=\"text-white font-bold text-lg\">\n            {component.name.charAt(0)}\n          </span>\n        </div>\n      </div>\n\n      <div className=\"space-y-2\">\n        <h3 className=\"font-semibold text-sm text-foreground\">{component.name}</h3>\n        <p className=\"text-xs text-muted-foreground\">{component.category}</p>\n        <p className=\"text-xs text-muted-foreground line-clamp-2\">{component.description}</p>\n        \n        {/* Component type badge */}\n        <div className=\"flex gap-2 flex-wrap\">\n          <Badge variant=\"secondary\" className=\"text-xs\">\n            {component.type}\n          </Badge>\n          {component.variants && (\n            <Badge variant=\"outline\" className=\"text-xs\">\n              {component.variants.length} variants\n            </Badge>\n          )}\n        </div>\n      </div>\n    </Card>\n  );\n}\n\nfunction ComponentProperties({ component }: { component: any }) {\n  const { updateObject, state } = useViewer();\n  const [values, setValues] = useState<Record<string, number>>(() => {\n    const initial: Record<string, number> = {};\n    Object.entries(component.parameters).forEach(([key, config]: [string, any]) => {\n      if (typeof config === 'object' && config.default !== undefined) {\n        initial[key] = config.default;\n      }\n    });\n    return initial;\n  });\n\n  const handleValueChange = (key: string, newValue: number) => {\n    setValues(prev => ({ ...prev, [key]: newValue }));\n    \n    if (state.selectedObjectId) {\n      updateObject(state.selectedObjectId, {\n        properties: { ...values, [key]: newValue }\n      });\n    }\n  };\n\n  return (\n    <div className=\"space-y-4\">\n      <h3 className=\"font-medium text-sm text-foreground\">Properties</h3>\n      \n      {Object.entries(component.parameters).map(([key, config]: [string, any]) => {\n        if (typeof config !== 'object') return null;\n        \n        return (\n          <div key={key} className=\"space-y-2\">\n            <Label className=\"text-xs font-medium text-foreground capitalize\">\n              {key.replace(/([A-Z])/g, ' $1').trim()}\n            </Label>\n            <div className=\"flex items-center gap-3\">\n              <Slider\n                value={[values[key] || config.default]}\n                onValueChange={([value]) => handleValueChange(key, value)}\n                min={config.min}\n                max={config.max}\n                step={config.step}\n                className=\"flex-1\"\n              />\n              <span className=\"text-xs text-muted-foreground w-12 text-right\">\n                {values[key] || config.default}\n              </span>\n            </div>\n          </div>\n        );\n      })}\n    </div>\n  );\n}\n\nexport default function BuildingLibrary({ onClose }: BuildingLibraryProps) {\n  const { state, dispatch, addObject } = useViewer();\n  const [searchQuery, setSearchQuery] = useState(\"\");\n  const [selectedCategory, setSelectedCategory] = useState(\"All\");\n  const [viewMode, setViewMode] = useState<\"grid\" | \"list\">(\"grid\");\n  const [selectedComponent, setSelectedComponent] = useState<any>(null);\n\n  const filteredComponents = searchQuery\n    ? searchComponents(searchQuery)\n    : selectedCategory === \"All\"\n    ? Object.values(BUILDING_COMPONENTS)\n    : getComponentsByCategory(selectedCategory);\n\n  const handleComponentSelect = (component: any) => {\n    // Create a new object with the component\n    const newObject = {\n      id: `component-${Date.now()}`,\n      type: component.geometry.type,\n      position: [0, 0, 0],\n      rotation: [0, 0, 0],\n      scale: [\n        component.geometry.parameters.width || 1,\n        component.geometry.parameters.height || 1,\n        component.geometry.parameters.length || 1\n      ],\n      material: component.defaultMaterial,\n      properties: { ...component.geometry.parameters },\n      visible: true,\n      layer: \"Default\"\n    };\n\n    addObject(newObject);\n    dispatch({ type: \"SELECT_OBJECT\", payload: newObject.id });\n    setSelectedComponent(component);\n  };\n\n  return (\n    <div className=\"h-full flex flex-col bg-background\">\n      {/* Header */}\n      <div className=\"p-4 border-b border-border\">\n        <div className=\"flex items-center justify-between mb-4\">\n          <h2 className=\"font-display text-lg font-semibold text-foreground\">\n            Building Components\n          </h2>\n          <div className=\"flex items-center gap-2\">\n            <Button\n              variant={viewMode === \"grid\" ? \"default\" : \"outline\"}\n              size=\"sm\"\n              onClick={() => setViewMode(\"grid\")}\n            >\n              <Grid3X3 className=\"h-4 w-4\" />\n            </Button>\n            <Button\n              variant={viewMode === \"list\" ? \"default\" : \"outline\"}\n              size=\"sm\"\n              onClick={() => setViewMode(\"list\")}\n            >\n              <List className=\"h-4 w-4\" />\n            </Button>\n          </div>\n        </div>\n\n        {/* Search */}\n        <div className=\"relative\">\n          <Search className=\"absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground\" />\n          <Input\n            placeholder=\"Search components...\"\n            value={searchQuery}\n            onChange={(e) => setSearchQuery(e.target.value)}\n            className=\"pl-10\"\n          />\n        </div>\n      </div>\n\n      {/* Categories */}\n      <div className=\"p-4 border-b border-border\">\n        <Tabs value={selectedCategory} onValueChange={setSelectedCategory}>\n          <TabsList className=\"grid w-full grid-cols-6 h-auto p-1\">\n            <TabsTrigger value=\"All\" className=\"text-xs\">All</TabsTrigger>\n            {COMPONENT_CATEGORIES.slice(0, 5).map((category) => (\n              <TabsTrigger key={category} value={category} className=\"text-xs\">\n                {category.slice(0, 3)}\n              </TabsTrigger>\n            ))}\n          </TabsList>\n        </Tabs>\n      </div>\n\n      {/* Main Content */}\n      <div className=\"flex-1 flex\">\n        {/* Components List */}\n        <ScrollArea className=\"flex-1\">\n          <div className=\"p-4\">\n            {viewMode === \"grid\" ? (\n              <div className=\"grid grid-cols-2 lg:grid-cols-3 gap-4\">\n                {filteredComponents.map((component) => (\n                  <BuildingCard\n                    key={component.id}\n                    component={component}\n                    onSelect={() => handleComponentSelect(component)}\n                  />\n                ))}\n              </div>\n            ) : (\n              <div className=\"space-y-2\">\n                {filteredComponents.map((component) => (\n                  <Card\n                    key={component.id}\n                    className=\"p-3 cursor-pointer hover:shadow-md transition-all duration-200 border-border\"\n                    onClick={() => handleComponentSelect(component)}\n                  >\n                    <div className=\"flex items-center gap-3\">\n                      <div className=\"w-10 h-10 bg-cardinal/10 rounded-lg flex items-center justify-center flex-shrink-0\">\n                        <span className=\"text-cardinal font-bold text-sm\">\n                          {component.name.charAt(0)}\n                        </span>\n                      </div>\n                      <div className=\"flex-1 min-w-0\">\n                        <h3 className=\"font-medium text-sm text-foreground truncate\">\n                          {component.name}\n                        </h3>\n                        <p className=\"text-xs text-muted-foreground\">{component.category}</p>\n                      </div>\n                      <Plus className=\"h-4 w-4 text-muted-foreground\" />\n                    </div>\n                  </Card>\n                ))}\n              </div>\n            )}\n          </div>\n        </ScrollArea>\n\n        {/* Properties Panel */}\n        {selectedComponent && (\n          <div className=\"w-80 border-l border-border bg-card p-4\">\n            <div className=\"space-y-6\">\n              <div>\n                <h3 className=\"font-medium text-sm text-foreground mb-2\">\n                  {selectedComponent.name}\n                </h3>\n                <p className=\"text-xs text-muted-foreground\">\n                  {selectedComponent.description}\n                </p>\n              </div>\n              \n              <ComponentProperties component={selectedComponent} />\n              \n              <div className=\"space-y-2\">\n                <Button\n                  size=\"sm\"\n                  className=\"w-full bg-gradient-cardinal text-primary-foreground shadow-cardinal hover:opacity-90\"\n                  onClick={() => handleComponentSelect(selectedComponent)}\n                >\n                  <Plus className=\"h-4 w-4 mr-2\" />\n                  Add to Scene\n                </Button>\n              </div>\n            </div>\n          </div>\n        )}\n      </div>\n\n      {/* Footer */}\n      <div className=\"p-4 border-t border-border\">\n        <div className=\"flex items-center justify-between text-xs text-muted-foreground\">\n          <span>{filteredComponents.length} components</span>\n          <span>Click to add to scene</span>\n        </div>\n      </div>\n    </div>\n  );\n}
+import { useState } from "react";
+import { Search, Grid3X3, List, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Slider } from "@/components/ui/slider";
+import { Label } from "@/components/ui/label";
+import {
+  BUILDING_COMPONENTS,
+  COMPONENT_CATEGORIES,
+  getComponentsByCategory,
+  searchComponents,
+} from "@/lib/buildingComponents";
+import { useViewer } from "@/contexts/ViewerContext";
+
+interface BuildingLibraryProps {
+  onClose: () => void;
+}
+
+function BuildingCard({ component, onSelect }: { component: any; onSelect: () => void }) {
+  return (
+    <Card
+      className="p-4 cursor-pointer hover:shadow-lg transition-all duration-200 hover:-translate-y-1 border-border"
+      onClick={onSelect}
+    >
+      <div className="w-full h-20 rounded-lg mb-3 bg-gradient-to-br from-cardinal-light/20 to-cardinal-light/5 flex items-center justify-center">
+        <div className="w-12 h-12 bg-cardinal rounded-lg flex items-center justify-center">
+          <span className="text-primary-foreground font-bold text-lg">
+            {component.name.charAt(0)}
+          </span>
+        </div>
+      </div>
+      <div className="space-y-2">
+        <h3 className="font-semibold text-sm text-foreground">{component.name}</h3>
+        <p className="text-xs text-muted-foreground">{component.category}</p>
+        <p className="text-xs text-muted-foreground line-clamp-2">{component.description}</p>
+        <div className="flex gap-2 flex-wrap">
+          <Badge variant="secondary" className="text-xs">{component.type}</Badge>
+          {component.variants && (
+            <Badge variant="outline" className="text-xs">{component.variants.length} variants</Badge>
+          )}
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+function ComponentProperties({ component }: { component: any }) {
+  const { updateObject, state } = useViewer();
+  const [values, setValues] = useState<Record<string, number>>(() => {
+    const initial: Record<string, number> = {};
+    Object.entries(component.parameters).forEach(([key, config]: [string, any]) => {
+      if (typeof config === "object" && config.default !== undefined) {
+        initial[key] = config.default;
+      }
+    });
+    return initial;
+  });
+
+  const handleValueChange = (key: string, newValue: number) => {
+    setValues((prev) => ({ ...prev, [key]: newValue }));
+    if (state.selectedObjectId) {
+      updateObject(state.selectedObjectId, { properties: { ...values, [key]: newValue } });
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <h3 className="font-medium text-sm text-foreground">Properties</h3>
+      {Object.entries(component.parameters).map(([key, config]: [string, any]) => {
+        if (typeof config !== "object") return null;
+        return (
+          <div key={key} className="space-y-2">
+            <Label className="text-xs font-medium text-foreground capitalize">
+              {key.replace(/([A-Z])/g, " $1").trim()}
+            </Label>
+            <div className="flex items-center gap-3">
+              <Slider
+                value={[values[key] || config.default]}
+                onValueChange={([value]) => handleValueChange(key, value)}
+                min={config.min}
+                max={config.max}
+                step={config.step}
+                className="flex-1"
+              />
+              <span className="text-xs text-muted-foreground w-12 text-right">
+                {values[key] || config.default}
+              </span>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+export default function BuildingLibrary({ onClose }: BuildingLibraryProps) {
+  const { state, dispatch, addObject } = useViewer();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [selectedComponent, setSelectedComponent] = useState<any>(null);
+
+  const filteredComponents = searchQuery
+    ? searchComponents(searchQuery)
+    : selectedCategory === "All"
+    ? Object.values(BUILDING_COMPONENTS)
+    : getComponentsByCategory(selectedCategory);
+
+  const handleComponentSelect = (component: any) => {
+    const newObject = {
+      type: component.geometry.type as any,
+      position: [0, 0, 0] as [number, number, number],
+      rotation: [0, 0, 0] as [number, number, number],
+      scale: [
+        component.geometry.parameters.width || 1,
+        component.geometry.parameters.height || 1,
+        component.geometry.parameters.length || 1,
+      ] as [number, number, number],
+      material: component.defaultMaterial,
+      properties: { ...component.geometry.parameters },
+      visible: true,
+      locked: false,
+      layer: "Default",
+      name: component.name,
+    };
+    const id = addObject(newObject);
+    dispatch({ type: "SELECT_OBJECT", payload: id });
+    setSelectedComponent(component);
+  };
+
+  return (
+    <div className="h-full flex flex-col bg-background">
+      <div className="p-4 border-b border-border">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-display text-lg font-semibold text-foreground">Building Components</h2>
+          <div className="flex items-center gap-2">
+            <Button variant={viewMode === "grid" ? "default" : "outline"} size="sm" onClick={() => setViewMode("grid")}>
+              <Grid3X3 className="h-4 w-4" />
+            </Button>
+            <Button variant={viewMode === "list" ? "default" : "outline"} size="sm" onClick={() => setViewMode("list")}>
+              <List className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input placeholder="Search components..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10" />
+        </div>
+      </div>
+
+      <div className="p-4 border-b border-border">
+        <Tabs value={selectedCategory} onValueChange={setSelectedCategory}>
+          <TabsList className="grid w-full grid-cols-6 h-auto p-1">
+            <TabsTrigger value="All" className="text-xs">All</TabsTrigger>
+            {COMPONENT_CATEGORIES.slice(0, 5).map((category) => (
+              <TabsTrigger key={category} value={category} className="text-xs">{category.slice(0, 3)}</TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
+      </div>
+
+      <div className="flex-1 flex">
+        <ScrollArea className="flex-1">
+          <div className="p-4">
+            {viewMode === "grid" ? (
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredComponents.map((component) => (
+                  <BuildingCard key={component.id} component={component} onSelect={() => handleComponentSelect(component)} />
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {filteredComponents.map((component) => (
+                  <Card key={component.id} className="p-3 cursor-pointer hover:shadow-md transition-all duration-200 border-border" onClick={() => handleComponentSelect(component)}>
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-cardinal/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <span className="text-cardinal font-bold text-sm">{component.name.charAt(0)}</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium text-sm text-foreground truncate">{component.name}</h3>
+                        <p className="text-xs text-muted-foreground">{component.category}</p>
+                      </div>
+                      <Plus className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+        </ScrollArea>
+
+        {selectedComponent && (
+          <div className="w-80 border-l border-border bg-card p-4">
+            <div className="space-y-6">
+              <div>
+                <h3 className="font-medium text-sm text-foreground mb-2">{selectedComponent.name}</h3>
+                <p className="text-xs text-muted-foreground">{selectedComponent.description}</p>
+              </div>
+              <ComponentProperties component={selectedComponent} />
+              <Button size="sm" className="w-full bg-gradient-cardinal text-primary-foreground shadow-cardinal hover:opacity-90" onClick={() => handleComponentSelect(selectedComponent)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add to Scene
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="p-4 border-t border-border">
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <span>{filteredComponents.length} components</span>
+          <span>Click to add to scene</span>
+        </div>
+      </div>
+    </div>
+  );
+}

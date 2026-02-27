@@ -1141,7 +1141,7 @@ function MeasureTool() {
       const rect = gl.domElement.getBoundingClientRect();
       const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
       const y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-      raycaster.setFromCamera({ x, y }, camera);
+      raycaster.setFromCamera(new THREE.Vector2(x, y), camera);
 
       const targets: THREE.Object3D[] = [];
       scene.traverse((obj) => {
