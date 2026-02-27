@@ -72,11 +72,48 @@ export default function BuildingModel() {
       {/* Interior wall - Second floor */}
       <Wall position={[2, 4.5, 0]} size={[0.15, 3, 10]} color="#d9d5d0" />
 
-      {/* Roof */}
-      <mesh position={[0, 6.5, 0]} rotation={[0, 0, 0]} castShadow>
-        <coneGeometry args={[8, 2.5, 4]} />
-        <meshStandardMaterial color="#8b7d6b" roughness={0.7} />
-      </mesh>
+      {/* Roof - proper gable using extruded triangle */}
+      <group position={[0, 6, 0]}>
+        {/* Left slope */}
+        <mesh position={[-3, 0.9, 0]} rotation={[0, 0, Math.PI * 0.18]} castShadow>
+          <boxGeometry args={[6.6, 0.15, 10.4]} />
+          <meshStandardMaterial color="#8b7d6b" roughness={0.7} />
+        </mesh>
+        {/* Right slope */}
+        <mesh position={[3, 0.9, 0]} rotation={[0, 0, -Math.PI * 0.18]} castShadow>
+          <boxGeometry args={[6.6, 0.15, 10.4]} />
+          <meshStandardMaterial color="#8b7d6b" roughness={0.7} />
+        </mesh>
+        {/* Ridge beam */}
+        <mesh position={[0, 1.85, 0]} castShadow>
+          <boxGeometry args={[0.2, 0.2, 10.4]} />
+          <meshStandardMaterial color="#6b5d4b" roughness={0.8} />
+        </mesh>
+        {/* Front gable wall */}
+        <mesh position={[0, 0.9, -5]} castShadow>
+          <bufferGeometry>
+            <bufferAttribute
+              attach="attributes-position"
+              count={3}
+              array={new Float32Array([-6, 0, 0, 6, 0, 0, 0, 1.9, 0])}
+              itemSize={3}
+            />
+          </bufferGeometry>
+          <meshStandardMaterial color="#e8e4e0" roughness={0.8} side={2} />
+        </mesh>
+        {/* Back gable wall */}
+        <mesh position={[0, 0.9, 5]} castShadow>
+          <bufferGeometry>
+            <bufferAttribute
+              attach="attributes-position"
+              count={3}
+              array={new Float32Array([6, 0, 0, -6, 0, 0, 0, 1.9, 0])}
+              itemSize={3}
+            />
+          </bufferGeometry>
+          <meshStandardMaterial color="#e8e4e0" roughness={0.8} side={2} />
+        </mesh>
+      </group>
 
       {/* Windows */}
       <Window position={[-3, 1.5, -5.05]} />

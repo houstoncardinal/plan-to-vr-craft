@@ -16,6 +16,8 @@ import {
   Save,
   Share2,
   Maximize2,
+  Trash2,
+  FilePlus,
 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import {
@@ -104,6 +106,34 @@ export default function ViewerHeader() {
       </Tooltip>
 
       <div className="h-6 w-px bg-border" />
+
+      {/* Scene actions */}
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground"
+            onClick={() => dispatch({ type: "CLEAR_ALL" })}
+            disabled={state.objects.length === 0}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>Clear Scene</TooltipContent>
+      </Tooltip>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground"
+            onClick={() => {
+              dispatch({ type: "CLEAR_ALL" });
+              dispatch({ type: "SET_MODE", payload: "build" });
+            }}
+          >
+            <FilePlus className="h-4 w-4" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>New Project</TooltipContent>
+      </Tooltip>
 
       {/* Grid & Snap */}
       <Tooltip>

@@ -155,7 +155,10 @@ export default function PropertiesPanel() {
 
             {/* Actions */}
             <div className="flex gap-1.5 pt-2 border-t border-border">
-              <Button variant="outline" size="sm" className="flex-1 h-8 text-xs gap-1">
+              <Button
+                variant="outline" size="sm" className="flex-1 h-8 text-xs gap-1"
+                onClick={() => dispatch({ type: "DUPLICATE_OBJECT", payload: selectedObject.id })}
+              >
                 <Copy className="h-3 w-3" />
                 Duplicate
               </Button>

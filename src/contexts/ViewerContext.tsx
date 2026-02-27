@@ -60,6 +60,8 @@ type ViewerAction =
   | { type: "ADD_OBJECT"; payload: SceneObject }
   | { type: "UPDATE_OBJECT"; payload: { id: string; changes: Partial<SceneObject> } }
   | { type: "DELETE_OBJECT"; payload: string }
+  | { type: "DUPLICATE_OBJECT"; payload: string }
+  | { type: "CLEAR_ALL" }
   | { type: "SET_GRID_VISIBLE"; payload: boolean }
   | { type: "SET_GRID_SNAP"; payload: boolean }
   | { type: "SET_DAY_NIGHT"; payload: number }
@@ -124,6 +126,31 @@ function reducer(state: ViewerState, action: ViewerAction): ViewerState {
         ...state,
         objects: state.objects.filter((o) => o.id !== action.payload),
         selectedObjectId: state.selectedObjectId === action.payload ? null : state.selectedObjectId,
+        undoStack: [...state.undoStack, state.objects],
+        redoStack: [],
+      };
+    case "DUPLICATE_OBJECT": {
+      const src = state.objects.find((o) => o.id === action.payload);
+      if (!src) return state;
+      const newObj: SceneObject = {
+        ...src,
+        id: `obj_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+        name: `${src.name} Copy`,
+        position: [src.position[0] + 1, src.position[1], src.position[2] + 1],
+      };
+      return {
+        ...state,
+        objects: [...state.objects, newObj],
+        selectedObjectId: newObj.id,
+        undoStack: [...state.undoStack, state.objects],
+        redoStack: [],
+      };
+    }
+    case "CLEAR_ALL":
+      return {
+        ...state,
+        objects: [],
+        selectedObjectId: null,
         undoStack: [...state.undoStack, state.objects],
         redoStack: [],
       };
