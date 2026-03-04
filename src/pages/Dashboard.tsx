@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -43,6 +44,7 @@ const pipelineSteps = [
 ];
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const [showUpload, setShowUpload] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
@@ -65,11 +67,13 @@ export default function Dashboard() {
       step++;
       if (step >= pipelineSteps.length) {
         clearInterval(interval);
+        // Navigate to viewer after processing completes
+        setTimeout(() => navigate("/viewer"), 600);
         return;
       }
       setPipelineStep(step);
       setPipelineProgress(Math.round((step / (pipelineSteps.length - 1)) * 100));
-    }, 1500);
+    }, 1200);
   };
 
   const statusBadge = (status: Project["status"]) => {
@@ -94,13 +98,22 @@ export default function Dashboard() {
             <h1 className="font-display text-3xl font-bold text-foreground">Projects</h1>
             <p className="text-muted-foreground mt-1">Manage your architectural models</p>
           </div>
-          <Button
-            onClick={() => setShowUpload(true)}
-            className="bg-gradient-cardinal text-primary-foreground shadow-cardinal hover:opacity-90"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            New Project
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button
+              onClick={() => setShowUpload(true)}
+              variant="outline"
+              className="border-border"
+            >
+              <Upload className="mr-2 h-4 w-4" />
+              Upload Blueprint
+            </Button>
+            <Link to="/viewer">
+              <Button className="bg-gradient-cardinal text-primary-foreground shadow-cardinal hover:opacity-90">
+                <Plus className="mr-2 h-4 w-4" />
+                New Project
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {/* Projects Grid */}
@@ -131,7 +144,7 @@ export default function Dashboard() {
               <Link to="/viewer">
                 <Button variant="outline" size="sm" className="w-full" disabled={project.status === "processing"}>
                   <Eye className="mr-2 h-3.5 w-3.5" />
-                  {project.status === "ready" ? "View Model" : project.status === "processing" ? "Processing…" : "Upload Files"}
+                  {project.status === "ready" ? "View Model" : project.status === "processing" ? "Processing…" : "Open in Editor"}
                 </Button>
               </Link>
             </Card>
@@ -159,7 +172,7 @@ export default function Dashboard() {
                   <>
                     <div className="flex items-center justify-between mb-6">
                       <h2 className="font-display text-xl font-semibold text-foreground">
-                        Upload Plans
+                        Upload Blueprint
                       </h2>
                       <button onClick={() => setShowUpload(false)} className="text-muted-foreground hover:text-foreground">
                         <X className="h-5 w-5" />
@@ -171,22 +184,22 @@ export default function Dashboard() {
                       onDragLeave={() => setDragOver(false)}
                       onDrop={(e) => { e.preventDefault(); setDragOver(false); handleFiles(e.dataTransfer.files); }}
                       className={`border-2 border-dashed rounded-xl p-10 text-center transition-colors cursor-pointer ${
-                        dragOver ? "border-primary bg-cardinal-light" : "border-border hover:border-muted-foreground"
+                        dragOver ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground"
                       }`}
-                      onClick={() => document.getElementById("file-input")?.click()}
+                      onClick={() => document.getElementById("dash-file-input")?.click()}
                     >
                       <Upload className="h-10 w-10 mx-auto mb-3 text-muted-foreground" />
                       <p className="text-sm font-medium text-foreground mb-1">
                         Drop files here or click to browse
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        PDF, DWG, DXF, DOCX — up to 50MB each
+                        PDF, DWG, DXF, PNG, JPG — up to 50MB each
                       </p>
                       <input
-                        id="file-input"
+                        id="dash-file-input"
                         type="file"
                         multiple
-                        accept=".pdf,.dwg,.dxf,.docx"
+                        accept=".pdf,.dwg,.dxf,.png,.jpg,.jpeg,.webp"
                         className="hidden"
                         onChange={(e) => handleFiles(e.target.files)}
                       />
@@ -197,7 +210,7 @@ export default function Dashboard() {
                         {uploadedFiles.map((file, i) => (
                           <div
                             key={i}
-                            className="flex items-center gap-3 text-sm bg-secondary rounded-lg px-3 py-2"
+                            className="flex items-center gap-3 text-sm bg-muted rounded-lg px-3 py-2"
                           >
                             <FileText className="h-4 w-4 text-primary shrink-0" />
                             <span className="text-foreground truncate flex-1">{file.name}</span>
@@ -220,19 +233,19 @@ export default function Dashboard() {
                       disabled={uploadedFiles.length === 0}
                       className="w-full mt-6 bg-gradient-cardinal text-primary-foreground shadow-cardinal hover:opacity-90"
                     >
-                      Start AI Processing
+                      Generate 3D Model
                     </Button>
                   </>
                 ) : (
                   <div className="text-center py-4">
                     <h2 className="font-display text-xl font-semibold text-foreground mb-8">
-                      Processing Your Plans
+                      Processing Your Blueprint
                     </h2>
                     <div className="space-y-4 text-left mb-8">
                       {pipelineSteps.map((step, i) => (
                         <div key={i} className="flex items-center gap-3">
                           {i < pipelineStep ? (
-                            <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />
+                            <CheckCircle2 className="h-5 w-5 text-emerald-400 shrink-0" />
                           ) : i === pipelineStep ? (
                             <Loader2 className="h-5 w-5 text-primary animate-spin shrink-0" />
                           ) : (
@@ -252,14 +265,6 @@ export default function Dashboard() {
                     <p className="text-xs text-muted-foreground">
                       {pipelineProgress}% complete
                     </p>
-                    {pipelineStep === pipelineSteps.length - 1 && (
-                      <Link to="/viewer">
-                        <Button className="mt-6 bg-gradient-cardinal text-primary-foreground shadow-cardinal">
-                          <Eye className="mr-2 h-4 w-4" />
-                          View 3D Model
-                        </Button>
-                      </Link>
-                    )}
                   </div>
                 )}
               </motion.div>

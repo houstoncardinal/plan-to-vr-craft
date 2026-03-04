@@ -62,7 +62,7 @@ export default function HeroSection() {
             transition={{ duration: 0.6, delay: 0.35 }}
             className="flex flex-wrap gap-4"
           >
-            <Link to="/dashboard">
+            <Link to="/viewer">
               <Button
                 size="lg"
                 className="bg-gradient-cardinal text-primary-foreground shadow-cardinal hover:shadow-[0_12px_40px_hsl(0_72%_51%/0.3)] hover:opacity-95 px-12 h-14 text-[15px] font-semibold tracking-wide rounded-2xl transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0"
