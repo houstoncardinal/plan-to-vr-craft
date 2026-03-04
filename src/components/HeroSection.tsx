@@ -71,14 +71,16 @@ export default function HeroSection() {
                 <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </Button>
             </Link>
-            <Button
-              size="lg"
-              variant="outline"
-              className="h-14 px-12 text-[15px] font-semibold tracking-wide border-border/60 text-foreground backdrop-blur-sm rounded-2xl hover:border-primary/20 hover:bg-primary/[0.03]"
-            >
-              <Play className="mr-2 h-4 w-4" />
-              Watch Demo
-            </Button>
+            <Link to="/solutions">
+              <Button
+                size="lg"
+                variant="outline"
+                className="h-14 px-12 text-[15px] font-semibold tracking-wide border-border/60 text-foreground backdrop-blur-sm rounded-2xl hover:border-primary/20 hover:bg-primary/[0.03]"
+              >
+                <Play className="mr-2 h-4 w-4" />
+                See Solutions
+              </Button>
+            </Link>
           </motion.div>
 
           {/* Stats — refined with subtle dividers */}

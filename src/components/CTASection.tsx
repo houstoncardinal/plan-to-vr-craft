@@ -26,15 +26,26 @@ export default function CTASection() {
             Join leading firms using VisitCardinal to create immersive 3D
             experiences from architectural plans.
           </p>
-          <Link to="/dashboard">
-            <Button
-              size="lg"
-              className="relative bg-primary-foreground text-foreground hover:bg-primary-foreground/95 h-14 px-12 text-[15px] font-semibold tracking-wide rounded-2xl shadow-[0_4px_20px_hsl(0_0%_100%/0.2)] hover:shadow-[0_8px_32px_hsl(0_0%_100%/0.3)] transition-all duration-300 hover:-translate-y-0.5"
-            >
-              Start Free Trial
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-          </Link>
+          <div className="relative flex flex-wrap items-center justify-center gap-4">
+            <Link to="/viewer">
+              <Button
+                size="lg"
+                className="bg-primary-foreground text-foreground hover:bg-primary-foreground/95 h-14 px-12 text-[15px] font-semibold tracking-wide rounded-2xl shadow-[0_4px_20px_hsl(0_0%_100%/0.2)] hover:shadow-[0_8px_32px_hsl(0_0%_100%/0.3)] transition-all duration-300 hover:-translate-y-0.5"
+              >
+                Start Free Trial
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
+            <Link to="/pricing">
+              <Button
+                size="lg"
+                variant="outline"
+                className="h-14 px-10 text-[15px] font-semibold tracking-wide rounded-2xl border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/10 backdrop-blur-sm"
+              >
+                View Pricing
+              </Button>
+            </Link>
+          </div>
         </motion.div>
       </div>
     </section>

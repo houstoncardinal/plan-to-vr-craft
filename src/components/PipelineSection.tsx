@@ -1,12 +1,13 @@
 import { motion } from "framer-motion";
-import { Upload, Cpu, Shapes, Paintbrush, CheckCircle2 } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Upload, Cpu, Shapes, Paintbrush, CheckCircle2, ArrowRight } from "lucide-react";
 
 const steps = [
-  { icon: Upload, label: "Upload Plans", color: "text-primary" },
-  { icon: Cpu, label: "AI Analysis", color: "text-primary" },
-  { icon: Shapes, label: "3D Generation", color: "text-primary" },
-  { icon: Paintbrush, label: "Material Application", color: "text-primary" },
-  { icon: CheckCircle2, label: "Ready to Explore", color: "text-primary" },
+  { icon: Upload, label: "Upload Plans", desc: "Drag & drop PDF, DWG, or images" },
+  { icon: Cpu, label: "AI Analysis", desc: "Walls, doors, rooms detected" },
+  { icon: Shapes, label: "3D Generation", desc: "Parametric model built live" },
+  { icon: Paintbrush, label: "Materials", desc: "Auto-applied surface finishes" },
+  { icon: CheckCircle2, label: "Explore", desc: "Walk through in VR / 3D" },
 ];
 
 export default function PipelineSection() {
@@ -27,9 +28,9 @@ export default function PipelineSection() {
           </p>
         </motion.div>
 
-        <div className="relative max-w-4xl mx-auto">
+        <div className="relative max-w-5xl mx-auto">
           {/* Connection line */}
-          <div className="absolute top-10 left-0 right-0 h-px bg-border hidden md:block" />
+          <div className="absolute top-12 left-[10%] right-[10%] h-px bg-gradient-to-r from-transparent via-border to-transparent hidden md:block" />
 
           <div className="grid grid-cols-2 md:grid-cols-5 gap-8 md:gap-4">
             {steps.map((step, i) => (
@@ -41,19 +42,38 @@ export default function PipelineSection() {
                 transition={{ delay: i * 0.1 }}
                 className="flex flex-col items-center text-center"
               >
-                <div className="relative z-10 h-20 w-20 rounded-2xl border-2 border-border bg-card flex items-center justify-center mb-4 shadow-sm">
-                  <step.icon className={`h-8 w-8 ${step.color}`} />
+                <div className="relative z-10 h-24 w-24 rounded-2xl border-2 border-border bg-card flex items-center justify-center mb-4 shadow-sm hover:shadow-lg hover:border-primary/30 hover:-translate-y-1 transition-all duration-300">
+                  <step.icon className="h-9 w-9 text-primary" />
+                  <span className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-gradient-cardinal text-primary-foreground text-[11px] font-bold flex items-center justify-center">
+                    {i + 1}
+                  </span>
                 </div>
-                <span className="text-sm font-medium text-foreground">
+                <span className="text-sm font-semibold text-foreground mb-1">
                   {step.label}
                 </span>
-                <span className="text-xs text-muted-foreground mt-1">
-                  Step {i + 1}
+                <span className="text-xs text-muted-foreground leading-snug max-w-[140px]">
+                  {step.desc}
                 </span>
               </motion.div>
             ))}
           </div>
         </div>
+
+        {/* CTA under pipeline */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          className="text-center mt-16"
+        >
+          <Link
+            to="/viewer"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
+          >
+            Try it now — upload your first blueprint
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+        </motion.div>
       </div>
     </section>
   );
