@@ -39,34 +39,47 @@ function SceneFog() {
 function GroundPlane() {
   const { state } = useViewer();
   const matRef = useRef<THREE.MeshStandardMaterial>(null!);
+  const nearMatRef = useRef<THREE.MeshStandardMaterial>(null!);
 
-  const seasonGroundColors: Record<string, string> = {
-    spring: "#4a7c3f",
-    summer: "#3d6b35",
-    autumn: "#7a5c30",
-    winter: "#c8d4d8",
+  const seasonGroundColors: Record<string, { far: string; near: string }> = {
+    spring: { far: "#4a7c3f", near: "#5a9048" },
+    summer: { far: "#3d6b35", near: "#4d8040" },
+    autumn: { far: "#7a5c30", near: "#8a6c38" },
+    winter: { far: "#c8d4d8", near: "#d8e0e4" },
   };
 
   useFrame(() => {
-    if (!matRef.current) return;
     const season = state.season || "summer";
-    const target = seasonGroundColors[season] || seasonGroundColors.summer;
-    matRef.current.color.lerp(new THREE.Color(target), 0.02);
+    const colors = seasonGroundColors[season] || seasonGroundColors.summer;
+    if (matRef.current) matRef.current.color.lerp(new THREE.Color(colors.far), 0.02);
+    if (nearMatRef.current) nearMatRef.current.color.lerp(new THREE.Color(colors.near), 0.02);
   });
 
   return (
-    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.1, 0]} receiveShadow>
-      {/* 16×16 segments — flat plane gets no visual benefit from extra tessellation;
-          fog hides far geometry anyway. meshStandardMaterial is far cheaper than Physical */}
-      <planeGeometry args={[800, 800, 16, 16]} />
-      <meshStandardMaterial
-        ref={matRef}
-        color="#3d6b35"
-        roughness={0.94}
-        metalness={0}
-        envMapIntensity={0.35}
-      />
-    </mesh>
+    <>
+      {/* Near ground — higher detail, richer material */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.05, 0]} receiveShadow>
+        <planeGeometry args={[200, 200, 32, 32]} />
+        <meshStandardMaterial
+          ref={nearMatRef}
+          color="#4d8040"
+          roughness={0.92}
+          metalness={0}
+          envMapIntensity={0.45}
+        />
+      </mesh>
+      {/* Far ground — extends to horizon */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.12, 0]} receiveShadow>
+        <planeGeometry args={[1200, 1200, 8, 8]} />
+        <meshStandardMaterial
+          ref={matRef}
+          color="#3d6b35"
+          roughness={0.96}
+          metalness={0}
+          envMapIntensity={0.25}
+        />
+      </mesh>
+    </>
   );
 }
 

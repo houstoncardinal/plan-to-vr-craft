@@ -288,23 +288,58 @@ export default function ViewerHeader() {
 
       <Tooltip>
         <TooltipTrigger asChild>
-          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
+          <Button
+            variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground"
+            onClick={() => {
+              const canvas = document.querySelector("canvas");
+              if (!canvas) return;
+              const link = document.createElement("a");
+              link.download = `${state.projectName.replace(/\s+/g, "-")}-${Date.now()}.png`;
+              link.href = canvas.toDataURL("image/png");
+              link.click();
+            }}
+          >
             <Camera className="h-4 w-4" />
           </Button>
         </TooltipTrigger>
-        <TooltipContent>Screenshot</TooltipContent>
+        <TooltipContent>Screenshot (PNG)</TooltipContent>
       </Tooltip>
       <Tooltip>
         <TooltipTrigger asChild>
-          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
+          <Button
+            variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground"
+            onClick={async () => {
+              const url = window.location.href;
+              try {
+                await navigator.clipboard.writeText(url);
+                // Use a simple toast-like feedback
+                const el = document.createElement("div");
+                el.textContent = "Link copied!";
+                el.className = "fixed top-16 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium shadow-lg z-[100] animate-in fade-in";
+                document.body.appendChild(el);
+                setTimeout(() => el.remove(), 2000);
+              } catch {
+                window.prompt("Copy this link:", url);
+              }
+            }}
+          >
             <Share2 className="h-4 w-4" />
           </Button>
         </TooltipTrigger>
-        <TooltipContent>Share</TooltipContent>
+        <TooltipContent>Share Link</TooltipContent>
       </Tooltip>
       <Tooltip>
         <TooltipTrigger asChild>
-          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
+          <Button
+            variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground"
+            onClick={() => {
+              if (document.fullscreenElement) {
+                document.exitFullscreen();
+              } else {
+                document.documentElement.requestFullscreen();
+              }
+            }}
+          >
             <Maximize2 className="h-4 w-4" />
           </Button>
         </TooltipTrigger>

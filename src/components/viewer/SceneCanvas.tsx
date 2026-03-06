@@ -949,54 +949,108 @@ function SceneObjects() {
 }
 
 
-// ─── Dynamic lighting ─────────────────────────────────────────────────────────
+// ─── Dynamic lighting — ultra-realistic multi-source architectural illumination ──
 function DynamicLighting() {
   const { state } = useViewer();
+  const sunRef = useRef<THREE.DirectionalLight>(null!);
   const cycle = state.dayNightCycle;
   const season = state.season || "summer";
 
   const sunAngle = cycle * Math.PI * 2;
-  const sunY = Math.sin(sunAngle) * 25;
-  const sunX = Math.cos(sunAngle) * 20;
-  const sunIntensity = Math.max(0, Math.sin(sunAngle)) * 2.5;
-  const ambientIntensity = 0.15 + Math.max(0, Math.sin(sunAngle)) * 0.4;
+  const sinSun = Math.sin(sunAngle);
+  const sunY = sinSun * 30;
+  const sunX = Math.cos(sunAngle) * 25;
+  const sunZ = Math.sin(sunAngle * 0.3) * 12;
 
-  const seasonColors: Record<string, { sky: [number, number, number]; ground: string; sun: string }> = {
-    spring: { sky: [0.4, 0.7, 0.9],  ground: "#4a7c4e", sun: "#fff5e6" },
-    summer: { sky: [0.35, 0.65, 0.95], ground: "#3d5c3d", sun: "#ffffff" },
-    autumn: { sky: [0.6, 0.5, 0.4],  ground: "#5c4a3d", sun: "#ffe4b5" },
-    winter: { sky: [0.7, 0.75, 0.85], ground: "#e8e8e8", sun: "#f0f8ff" },
+  // Smooth intensity curves
+  const rawSunIntensity = Math.max(0, sinSun);
+  const sunIntensity = rawSunIntensity * rawSunIntensity * 3.2; // quadratic falloff
+  const ambientIntensity = 0.08 + rawSunIntensity * 0.35;
+  const isDusk = sinSun > -0.1 && sinSun < 0.3 && cycle > 0.4;
+  const isNight = cycle < 0.22 || cycle > 0.78;
+
+  const seasonColors: Record<string, { sky: [number, number, number]; ground: string; sun: string; dusk: string }> = {
+    spring: { sky: [0.45, 0.72, 0.92], ground: "#4a7c4e", sun: "#fff5e0", dusk: "#ff9060" },
+    summer: { sky: [0.38, 0.68, 0.96], ground: "#3d6b35", sun: "#fffaf0", dusk: "#ff8040" },
+    autumn: { sky: [0.62, 0.52, 0.42], ground: "#5c4a3d", sun: "#ffe4b5", dusk: "#e06020" },
+    winter: { sky: [0.72, 0.78, 0.88], ground: "#d8dce0", sun: "#f0f0ff", dusk: "#b080a0" },
   };
   const c = seasonColors[season] || seasonColors.summer;
+  const sunColor = isDusk ? c.dusk : c.sun;
 
   return (
     <>
+      {/* Primary sun — high-res cascaded shadow map */}
       <directionalLight
-        position={[sunX, sunY, 10]}
+        ref={sunRef}
+        position={[sunX, sunY, sunZ + 10]}
         intensity={sunIntensity}
-        color={c.sun}
+        color={sunColor}
         castShadow
         shadow-mapSize-width={4096}
         shadow-mapSize-height={4096}
-        shadow-camera-far={140}
-        shadow-camera-left={-70}
-        shadow-camera-right={70}
-        shadow-camera-top={70}
-        shadow-camera-bottom={-70}
-        shadow-bias={-0.00025}
-        shadow-normalBias={0.015}
-        shadow-radius={2}
+        shadow-camera-far={160}
+        shadow-camera-left={-80}
+        shadow-camera-right={80}
+        shadow-camera-top={80}
+        shadow-camera-bottom={-80}
+        shadow-bias={-0.0002}
+        shadow-normalBias={0.02}
+        shadow-radius={3}
       />
+
+      {/* Ambient base — subtle, prevents pitch-black areas */}
       <ambientLight intensity={ambientIntensity} color={new THREE.Color(...c.sky)} />
-      <hemisphereLight args={[new THREE.Color(...c.sky), new THREE.Color(c.ground), 0.65]} />
-      {/* Cool fill from opposite side — softens harsh shadows */}
+
+      {/* Hemisphere — sky-to-ground gradient fill */}
+      <hemisphereLight args={[new THREE.Color(...c.sky), new THREE.Color(c.ground), 0.7]} />
+
+      {/* Cool counter-key fill — softens harsh shadows from primary sun */}
       <directionalLight
-        position={[-sunX * 0.55, Math.max(6, sunY * 0.7), -12]}
-        intensity={sunIntensity * 0.24}
-        color="#8ab4e8"
+        position={[-sunX * 0.6, Math.max(8, sunY * 0.65), -sunZ - 15]}
+        intensity={sunIntensity * 0.22}
+        color="#90b8e8"
       />
-      {/* Subtle warm ground bounce */}
-      <directionalLight position={[0, -6, 0]} intensity={0.07} color={c.ground} />
+
+      {/* Rim / back light — adds depth and silhouette separation */}
+      <directionalLight
+        position={[-sunX * 0.3, sunY * 0.5 + 5, -20]}
+        intensity={sunIntensity * 0.15}
+        color="#c0d8f0"
+      />
+
+      {/* Warm ground bounce — simulates radiosity from sun-heated surfaces */}
+      <directionalLight position={[0, -5, 0]} intensity={0.09} color={c.ground} />
+
+      {/* Night: subtle cool moonlight when sun is down */}
+      {isNight && (
+        <>
+          <directionalLight
+            position={[-sunX, -sunY * 0.4 + 20, -10]}
+            intensity={0.35}
+            color="#8090c0"
+            castShadow
+            shadow-mapSize-width={1024}
+            shadow-mapSize-height={1024}
+            shadow-camera-far={80}
+            shadow-camera-left={-40}
+            shadow-camera-right={40}
+            shadow-camera-top={40}
+            shadow-camera-bottom={-40}
+            shadow-bias={-0.0005}
+          />
+          <ambientLight intensity={0.06} color="#404868" />
+        </>
+      )}
+
+      {/* Dawn/dusk: warm atmospheric fill */}
+      {isDusk && (
+        <directionalLight
+          position={[sunX * 1.5, 2, sunZ]}
+          intensity={0.6}
+          color="#ff7040"
+        />
+      )}
     </>
   );
 }
@@ -1419,22 +1473,21 @@ export default function SceneCanvas() {
   return (
     <div className="flex-1 relative">
       <Canvas
-        shadows
-        camera={{ position: [20, 16, 20], fov: 55 }}
-        // dpr: cap at 2× for sharp rendering on high-DPI displays without over-sampling
+        shadows="soft"
+        camera={{ position: [22, 14, 22], fov: 50, near: 0.1, far: 2000 }}
         dpr={[1, 2]}
         gl={{
           antialias: true,
-          // logarithmicDepthBuffer: eliminates z-fighting on coplanar faces
           logarithmicDepthBuffer: true,
           toneMapping: THREE.ACESFilmicToneMapping,
-          toneMappingExposure: 1.15,
+          toneMappingExposure: 1.2,
           powerPreference: "high-performance",
-          // SRGBColorSpace ensures correct linear → sRGB conversion for display
           outputColorSpace: THREE.SRGBColorSpace,
         }}
         onCreated={({ gl }) => {
-          gl.shadowMap.type = THREE.PCFSoftShadowMap;
+          gl.shadowMap.enabled = true;
+          gl.shadowMap.type = THREE.VSMShadowMap;
+          gl.shadowMap.autoUpdate = true;
         }}
         onPointerMissed={() => {
           if (state.activeTool === "select" && !isFPS) {
