@@ -13,11 +13,15 @@ import { NeighborhoodScene, NPC_WAYPOINTS, NPC_COLORS } from "@/components/viewe
 
 // ─── Module-level drag state ──────────────────────────────────────────────────
 // Using refs outside React so Three.js can update at 60fps without re-renders
+const DRAG_THRESHOLD = 5; // pixels before drag activates
 const dragState = {
   active: false,
+  pending: false,        // pointer is down but hasn't moved enough yet
   objectId: null as string | null,
   objectY: 0,           // keep original Y during drag
   pos: new THREE.Vector3(),
+  startScreenX: 0,
+  startScreenY: 0,
 };
 // OrbitControls ref accessible by DragController
 const orbitRef = { current: null as any };
