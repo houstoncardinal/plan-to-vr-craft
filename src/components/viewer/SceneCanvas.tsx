@@ -115,20 +115,35 @@ function DragController() {
 
   useEffect(() => {
     const onUp = () => {
-      if (!dragState.active || !dragState.objectId) return;
-      const snap = state.gridSnap ? state.gridSize : 0.1;
-      const x = Math.round(dragState.pos.x / snap) * snap;
-      const z = Math.round(dragState.pos.z / snap) * snap;
-      dispatch({
-        type: "UPDATE_OBJECT",
-        payload: { id: dragState.objectId, changes: { position: [x, dragState.objectY, z] } },
-      });
+      if (dragState.active && dragState.objectId) {
+        const snap = state.gridSnap ? state.gridSize : 0.1;
+        const x = Math.round(dragState.pos.x / snap) * snap;
+        const z = Math.round(dragState.pos.z / snap) * snap;
+        dispatch({
+          type: "UPDATE_OBJECT",
+          payload: { id: dragState.objectId, changes: { position: [x, dragState.objectY, z] } },
+        });
+      }
       dragState.active = false;
+      dragState.pending = false;
       dragState.objectId = null;
       if (orbitRef.current) orbitRef.current.enabled = true;
     };
+    const onMove = (e: PointerEvent) => {
+      if (!dragState.pending || dragState.active) return;
+      const dx = e.clientX - dragState.startScreenX;
+      const dy = e.clientY - dragState.startScreenY;
+      if (Math.sqrt(dx * dx + dy * dy) >= DRAG_THRESHOLD) {
+        dragState.active = true;
+        dragState.pending = false;
+      }
+    };
     window.addEventListener("pointerup", onUp);
-    return () => window.removeEventListener("pointerup", onUp);
+    window.addEventListener("pointermove", onMove);
+    return () => {
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointermove", onMove);
+    };
   }, [dispatch, state.gridSnap, state.gridSize]);
 
   useFrame(() => {
@@ -196,11 +211,14 @@ function SceneObjectMesh({ obj, isSelected }: { obj: SceneObject; isSelected: bo
       e.stopPropagation();
       dispatch({ type: "SELECT_OBJECT", payload: obj.id });
 
-      // Start drag
-      dragState.active = true;
+      // Set pending drag — won't activate until pointer moves past threshold
+      dragState.pending = true;
+      dragState.active = false;
       dragState.objectId = obj.id;
       dragState.objectY = obj.position[1];
       dragState.pos.set(obj.position[0], 0, obj.position[2]);
+      dragState.startScreenX = e.clientX ?? e.nativeEvent?.clientX ?? 0;
+      dragState.startScreenY = e.clientY ?? e.nativeEvent?.clientY ?? 0;
 
       if (orbitRef.current) orbitRef.current.enabled = false;
     },
