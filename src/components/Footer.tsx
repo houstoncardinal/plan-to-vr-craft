@@ -5,7 +5,7 @@ const footerLinks = {
     { label: "3D Viewer", href: "/viewer" },
     { label: "Dashboard", href: "/dashboard" },
     { label: "AI Copilot", href: "/viewer" },
-    { label: "Blueprint Upload", href: "/viewer" },
+    { label: "Blueprint Upload", href: "/dashboard" },
   ],
   Solutions: [
     { label: "Commercial", href: "/solutions" },
@@ -16,14 +16,14 @@ const footerLinks = {
   Company: [
     { label: "About Us", href: "/about" },
     { label: "Pricing", href: "/pricing" },
+    { label: "Contact", href: "/contact" },
     { label: "Careers", href: "/about" },
-    { label: "Contact", href: "/about" },
   ],
   Resources: [
-    { label: "Documentation", href: "#" },
-    { label: "API Reference", href: "#" },
-    { label: "Blog", href: "#" },
-    { label: "Community", href: "#" },
+    { label: "Documentation", href: "/solutions" },
+    { label: "API Reference", href: "/solutions" },
+    { label: "Blog", href: "/about" },
+    { label: "Community", href: "/contact" },
   ],
 };
 
@@ -50,6 +50,7 @@ export default function Footer() {
                 <a
                   key={s}
                   href="#"
+                  aria-label={s === "X" ? "Twitter" : s === "Li" ? "LinkedIn" : "GitHub"}
                   className="h-8 w-8 rounded-lg bg-secondary flex items-center justify-center text-[11px] font-semibold text-muted-foreground hover:text-foreground hover:bg-secondary/80 transition-colors"
                 >
                   {s}

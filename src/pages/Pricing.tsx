@@ -4,6 +4,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Check, ArrowRight, Zap } from "lucide-react";
+import SEOHead from "@/components/SEOHead";
 
 const plans = [
   {
@@ -62,10 +63,14 @@ const plans = [
 export default function Pricing() {
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title="Pricing — VisitCardinal | Plans That Scale With Your Vision"
+        description="Start free, upgrade when you're ready. Simple pricing for AI-powered architectural visualization with no hidden fees."
+        path="/pricing"
+      />
       <Navbar />
       <main className="pt-32 pb-24">
         <div className="container">
-          {/* Header */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -85,7 +90,6 @@ export default function Pricing() {
             </p>
           </motion.div>
 
-          {/* Plans grid */}
           <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
             {plans.map((plan, i) => (
               <motion.div
@@ -133,7 +137,7 @@ export default function Pricing() {
                   ))}
                 </ul>
 
-                <Link to="/viewer">
+                <Link to={plan.name === "Enterprise" ? "/contact" : "/viewer"}>
                   <Button
                     className={`w-full h-12 rounded-xl text-sm font-semibold transition-all duration-300 hover:-translate-y-0.5 ${
                       plan.highlighted

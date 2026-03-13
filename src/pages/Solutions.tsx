@@ -4,6 +4,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Building2, HardHat, Landmark, Home, Presentation, MapPin } from "lucide-react";
+import SEOHead from "@/components/SEOHead";
 
 const solutions = [
   {
@@ -47,10 +48,14 @@ const solutions = [
 export default function Solutions() {
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title="Solutions — VisitCardinal | Architectural Visualization for Every Project"
+        description="From commercial towers to residential homes, VisitCardinal's AI adapts to your workflow. Explore solutions for every project type."
+        path="/solutions"
+      />
       <Navbar />
       <main className="pt-32 pb-24">
         <div className="container">
-          {/* Header */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -67,7 +72,6 @@ export default function Solutions() {
             </p>
           </motion.div>
 
-          {/* Solutions grid */}
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto mb-20">
             {solutions.map((s, i) => (
               <motion.div
@@ -94,7 +98,6 @@ export default function Solutions() {
             ))}
           </div>
 
-          {/* CTA */}
           <motion.div
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
