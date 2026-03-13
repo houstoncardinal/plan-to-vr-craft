@@ -178,19 +178,7 @@ const demoSteps = [
           <div className="mt-4 rounded-xl bg-card border border-border p-4">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-semibold text-foreground">Building 3D Model</span>
-              <motion.span
-                className="text-xs font-bold text-primary"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-              >
-                <motion.span
-                  initial={{ value: 0 }}
-                  animate={{ value: 100 }}
-                  transition={{ duration: 3, ease: "easeOut" }}
-                >
-                  100%
-                </motion.span>
-              </motion.span>
+              <span className="text-xs font-bold text-primary">100%</span>
             </div>
             <div className="h-2 rounded-full bg-secondary overflow-hidden">
               <motion.div
