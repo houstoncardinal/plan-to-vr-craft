@@ -4,6 +4,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Users, Globe, Award, Target } from "lucide-react";
+import SEOHead from "@/components/SEOHead";
 
 const values = [
   { icon: Target, title: "Precision First", description: "Every wall, every dimension, every material — we obsess over accuracy so architects can trust what they see." },
@@ -22,6 +23,11 @@ const stats = [
 export default function About() {
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title="About VisitCardinal — Building the Future of Architecture"
+        description="Learn about VisitCardinal's mission to make immersive architectural visualization accessible to every firm, from boutique studios to global enterprises."
+        path="/about"
+      />
       <Navbar />
       <main className="pt-32 pb-24">
         <div className="container">
